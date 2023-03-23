@@ -1,0 +1,24 @@
+syntax = "proto3";
+package openPanel;
+
+import "common.proto";
+
+message InitializeRequest {
+  string ip = 1;
+  int32 port = 2;
+  string serverID = 3;
+  string token = 4;
+}
+
+message InitializeResponse {
+  string clientCert = 1;
+  string clientPrivateKey = 2;
+  string CACert = 3;
+  repeated Node nodes = 4;
+  Error error = 5;
+}
+
+
+service InitializeService {
+  rpc Initialize(InitializeRequest) returns (InitializeResponse);
+}

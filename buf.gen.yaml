@@ -1,0 +1,20 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: github.com/openPanel/app/generated/pb
+    except:
+      - buf.build/googleapis/googleapis
+      - buf.build/grpc-ecosystem/grpc-gateway
+plugins:
+  - plugin: go
+    out: app/generated/pb
+    opt: paths=source_relative
+  - plugin: go-grpc
+    out: app/generated/pb
+    opt: paths=source_relative,require_unimplemented_servers=false
+  - plugin: grpc-gateway
+    out: app/generated/pb
+    opt: paths=source_relative
+#  - plugin: openapiv2
+#    out: third_party/OpenAPI

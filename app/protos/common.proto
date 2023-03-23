@@ -1,0 +1,14 @@
+syntax = "proto3";
+package openPanel;
+
+message Node {
+  string ip = 1;
+  int32 port = 2;
+  string name = 3;
+  string cert = 4;
+}
+
+message Error {
+  int32 code = 1;
+  string message = 2;
+}
