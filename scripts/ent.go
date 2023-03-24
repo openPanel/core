@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+	"strings"
 
 	"entgo.io/contrib/entproto"
 	"entgo.io/ent/entc"
@@ -32,8 +34,37 @@ func ent() {
 		if err != nil {
 			log.Fatalf("running ent codegen: %v", err)
 		}
+
+		if name == "shared" {
+			moveGenerateProto()
+		}
+
 		log.Println("running ent codegen for " + name + " done")
 	}
 
 	log.Println("running ent codegen done")
+}
+
+func moveGenerateProto() {
+	proto, err := os.ReadFile("./app/generated/db/shared/proto/entpb/entpb.proto")
+	if err != nil {
+		log.Fatalf("failed to read proto file: %v", err)
+	}
+	protoStr := string(proto)
+	var processed string
+	for _, line := range strings.Split(protoStr, "\n") {
+		if strings.HasPrefix(line, "option go_package") {
+			continue
+		}
+		processed += line + "\n"
+	}
+	err = os.WriteFile("./app/protos/entpb.proto", []byte(processed), 0644)
+	if err != nil {
+		log.Fatalf("failed to write proto file: %v", err)
+	}
+
+	err = os.RemoveAll("./app/generated/db/shared/proto")
+	if err != nil {
+		log.Fatalf("failed to remove proto dir: %v", err)
+	}
 }

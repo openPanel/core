@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,7 +14,7 @@ import (
 	"github.com/openPanel/core/app/tools/utils"
 )
 
-func getLocalDatabase() *local.Client {
+func getInitLocalDatabase() *local.Client {
 	const filename = "core.local.db"
 	file, err := utils.RequireDataFile(filename, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
@@ -32,5 +33,10 @@ func getLocalDatabase() *local.Client {
 	if err != nil {
 		log.Fatalf("Failed to open local database: %s", err)
 	}
+
+	if err = client.Schema.Create(context.Background()); err != nil {
+		log.Fatalf("Failed to create local database schema: %s", err)
+	}
+
 	return client
 }

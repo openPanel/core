@@ -1,6 +1,7 @@
 syntax = "proto3";
 package openPanel;
 
+import "entpb.proto";
 import "common.proto";
 
 message InitializeRequest {
@@ -14,7 +15,7 @@ message InitializeResponse {
   string clientCert = 1;
   string clientPrivateKey = 2;
   string CACert = 3;
-  repeated Node nodes = 4;
+  repeated entpb.Node nodes = 4;
   Error error = 5;
 }
 
