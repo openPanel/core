@@ -15,7 +15,7 @@ func (KV) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("key").Unique(),
 		field.String("value"),
-		field.Time("expires_at"),
+		field.Time("expires_at").Optional(),
 	}
 }
 

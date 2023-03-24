@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/openPanel/core/app/bootstrap"
 	"github.com/openPanel/core/app/tools/utils"
 )
 
@@ -28,10 +29,9 @@ func joinAction(cmd *cobra.Command, args []string) {
 
 	ip, port := utils.AssertPublicAddress(address)
 
+	bootstrap.Join(ip, port, token)
 }
 
 func init() {
 	rootCmd.AddCommand(joinCmd)
-
-	attachServerFlags(joinCmd)
 }

@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"strconv"
-
 	"github.com/spf13/cobra"
+
+	"github.com/openPanel/core/app/bootstrap"
 )
 
 var startLongHelp = `The start command is used to launch either a standalone application or the first node of a cluster.
@@ -16,19 +16,10 @@ var startCmd = &cobra.Command{
 	Run:   startAction,
 }
 
-func startAction(cmd *cobra.Command, args []string) {
-	host, _ := cmd.Flags().GetIP("ip")
-	port, _ := cmd.Flags().GetInt("port")
-
-	if port < 1 || port > 65535 {
-		panic("Invalid port" + strconv.Itoa(port))
-	}
-
-	_ = host
+func startAction(_ *cobra.Command, _ []string) {
+	bootstrap.Start()
 }
 
 func init() {
 	rootCmd.AddCommand(startCmd)
-
-	attachServerFlags(startCmd)
 }

@@ -12,8 +12,7 @@ import (
 func AssertPublicAddress(address string) (net.IP, int) {
 	parts := strings.Split(address, ":")
 	if len(parts) == 0 || len(parts) > 2 {
-		//fatalWithMessage("Invalid address " + address)
-		log.Println()
+		log.Println("Invalid address " + address)
 	}
 
 	ip := net.ParseIP(parts[0])
@@ -22,7 +21,10 @@ func AssertPublicAddress(address string) (net.IP, int) {
 	}
 
 	if !ip.IsGlobalUnicast() {
-		panic("IP address is not global unicast address " + ip.String())
+		log.Println("IP address is not global unicast address " + ip.String())
+	}
+	if ip.IsPrivate() {
+		log.Println("IP address is private " + ip.String())
 	}
 	var port int
 	var err error
