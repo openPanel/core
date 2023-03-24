@@ -5,3 +5,7 @@ func connectToSharedDatabase() {
 
 func createInitSharedDatabase() {
 }
+
+func commonInit() {
+
+}
