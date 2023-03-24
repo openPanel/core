@@ -9,7 +9,7 @@ import (
 
 	"github.com/openPanel/core/app/global"
 	customLog "github.com/openPanel/core/app/global/log"
-	"github.com/openPanel/core/app/tools/utils"
+	"github.com/openPanel/core/app/tools/fileUtils"
 )
 
 func initLogger() {
@@ -21,7 +21,7 @@ func initLogger() {
 		c = zap.NewProductionEncoderConfig()
 	}
 
-	logFile, err := utils.RequireDataFile("core.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	logFile, err := fileUtils.RequireDataFile("core.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}

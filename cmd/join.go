@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/openPanel/core/app/bootstrap"
-	"github.com/openPanel/core/app/tools/utils"
+	"github.com/openPanel/core/app/tools/netUtils"
 )
 
 var joinCmd = &cobra.Command{
@@ -27,7 +27,7 @@ func joinAction(cmd *cobra.Command, args []string) {
 	address := args[0]
 	token := args[1]
 
-	ip, port := utils.AssertPublicAddress(address)
+	ip, port := netUtils.AssertPublicAddress(address)
 
 	bootstrap.Join(ip, port, token)
 }

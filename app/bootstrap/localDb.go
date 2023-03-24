@@ -11,12 +11,12 @@ import (
 
 	"github.com/openPanel/core/app/generated/db/local"
 	"github.com/openPanel/core/app/global/log"
-	"github.com/openPanel/core/app/tools/utils"
+	"github.com/openPanel/core/app/tools/fileUtils"
 )
 
 func getInitLocalDatabase() *local.Client {
 	const filename = "core.local.db"
-	file, err := utils.RequireDataFile(filename, os.O_RDWR|os.O_CREATE, 0644)
+	file, err := fileUtils.RequireDataFile(filename, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatalf("Failed to open local database file: %s", err)
 	}
