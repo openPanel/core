@@ -16,5 +16,7 @@ plugins:
   - plugin: grpc-gateway
     out: app/generated/pb
     opt: paths=source_relative
-#  - plugin: openapiv2
-#    out: third_party/OpenAPI
+  - plugin: openapiv2
+    out: third_party/OpenAPI
+    strategy: all
+    opt: allow_merge=true,merge_file_name=openPanel

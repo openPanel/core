@@ -22,6 +22,13 @@ var (
 		Name:       "kvs",
 		Columns:    KvsColumns,
 		PrimaryKey: []*schema.Column{KvsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "kv_key",
+				Unique:  true,
+				Columns: []*schema.Column{KvsColumns[3]},
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{

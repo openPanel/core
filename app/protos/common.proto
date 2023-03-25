@@ -1,7 +1,0 @@
-syntax = "proto3";
-package openPanel;
-
-message Error {
-  int32 code = 1;
-  string message = 2;
-}

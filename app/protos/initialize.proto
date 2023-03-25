@@ -2,7 +2,9 @@ syntax = "proto3";
 package openPanel;
 
 import "entpb.proto";
-import "common.proto";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 message InitializeRequest {
   string ip = 1;
@@ -16,10 +18,18 @@ message InitializeResponse {
   string clientPrivateKey = 2;
   string CACert = 3;
   repeated entpb.Node nodes = 4;
-  Error error = 5;
 }
 
-
 service InitializeService {
-  rpc Initialize(InitializeRequest) returns (InitializeResponse);
+  rpc Initialize(InitializeRequest) returns (InitializeResponse) {
+    option (google.api.http) = {
+      post: "/initialize"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Join a cluster"
+      description: "A node try to initialize to the cluster"
+      tags: "Initialize"
+    };
+  }
 }

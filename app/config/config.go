@@ -1,64 +1,36 @@
+// Config load from local sqlite database, ensure all call to this package is after bootstrap LocalDb
+
 package config
 
 import (
-	"io"
-	"os"
+	"context"
 
-	"gopkg.in/yaml.v3"
+	"github.com/openPanel/core/app/db/db"
+	"github.com/openPanel/core/app/generated/db/local"
+	"github.com/openPanel/core/app/generated/db/local/kv"
 )
 
-type Config struct {
-	// Port
-	Port int
-	// DataDir
-	DataDir string
-	// ListenIp
-	ListenIp string
+func Load(key Key) (string, error) {
+	v, err := db.GetLocalDb().KV.Query().
+		Where(kv.Key(string(key))).
+		Only(context.Background())
+	if err != nil {
+		if local.IsNotFound(err) {
+			return "", nil
+		} else {
+			return "", err
+		}
+	}
+	return v.Value, nil
 }
 
-func NewConfig(port int, dataDir string, listenIp string) *Config {
-	return &Config{
-		Port:     port,
-		DataDir:  dataDir,
-		ListenIp: listenIp,
-	}
-}
-
-func (c *Config) Sync() error {
-	data, err := yaml.Marshal(c)
-	if err != nil {
-		return err
-	}
-	file, err := os.Create("config.yml")
-	if err != nil {
-		return err
-	}
-	defer func(File *os.File) {
-		_ = File.Close()
-	}(file)
-	_, err = file.Write(data)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func TryLoadConfig() (*Config, bool) {
-	file, err := os.Open("config.yml")
-	if err != nil {
-		return nil, false
-	}
-	defer func(File *os.File) {
-		_ = File.Close()
-	}(file)
-	data, err := io.ReadAll(file)
-	if err != nil {
-		return nil, false
-	}
-	var config Config
-	err = yaml.Unmarshal(data, &config)
-	if err != nil {
-		return nil, false
-	}
-	return &config, true
+func Save(key Key, value string) error {
+	err := db.GetLocalDb().KV.
+		Create().
+		SetKey(string(key)).
+		SetValue(value).
+		OnConflictColumns(kv.FieldKey).
+		UpdateValue().
+		Exec(context.Background())
+	return err
 }

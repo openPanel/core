@@ -1,18 +1,14 @@
 package global
 
 import (
-	"go.uber.org/zap"
-
 	"github.com/openPanel/core/app/generated/db/local"
 	"github.com/openPanel/core/app/generated/db/shared"
 	"github.com/openPanel/core/app/global/buildType"
 )
 
 type application struct {
-	DbL *local.Client
-	DbS *shared.Client
-
-	Logger *zap.SugaredLogger
+	DbLocal  *local.Client
+	DbShared *shared.Client
 
 	Mode buildType.Mode
 }

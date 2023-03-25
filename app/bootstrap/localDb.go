@@ -10,6 +10,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/openPanel/core/app/generated/db/local"
+	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/tools/fileUtils"
 )
@@ -27,9 +28,9 @@ func getInitLocalDatabase() *local.Client {
 		log.Fatalf("Failed to get absolute path of local database file: %s", err)
 	}
 
-	dbString := fmt.Sprintf("file:%s?cache=shared&mode=rwc&_journal_mode=WAL&_fk=1&_timeout=5000", path)
+	DSN := fmt.Sprintf("file:%s?cache=shared&mode=rwc&_journal_mode=WAL&_fk=1&_timeout=5000", path)
 
-	client, err := local.Open(dialect.SQLite, dbString)
+	client, err := local.Open(dialect.SQLite, DSN)
 	if err != nil {
 		log.Fatalf("Failed to open local database: %s", err)
 	}
@@ -39,4 +40,8 @@ func getInitLocalDatabase() *local.Client {
 	}
 
 	return client
+}
+
+func localDatabaseBootstrap() {
+	global.App.DbLocal = getInitLocalDatabase()
 }

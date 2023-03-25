@@ -1,0 +1,25 @@
+syntax = "proto3";
+package openPanel;
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    version: "1.0";
+    title: "openPanel HTTP API";
+    license: {
+      name: "Apache 2.0";
+      url: "https://www.apache.org/licenses/LICENSE-2.0.html";
+    };
+    contact: {
+      name: "openPanel";
+      url: "https://github.com/openPanel/core/issues";
+    };
+  };
+  external_docs: {
+    url: "https://github.com/openPanel/core";
+    description: "openPanel repository";
+  };
+};

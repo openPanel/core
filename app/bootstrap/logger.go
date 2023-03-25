@@ -41,6 +41,5 @@ func initLogger() {
 		logger = logger.WithOptions(zap.Development())
 	}
 
-	global.App.Logger = logger.Sugar()
 	customLog.UpdateLogger(logger.Sugar())
 }

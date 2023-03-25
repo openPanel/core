@@ -3,6 +3,7 @@ package local
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 
 	"github.com/openPanel/core/app/db/mixin"
 )
@@ -23,5 +24,11 @@ func (KV) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.TimeCreateMixin{},
 		mixin.TimeUpdateMixin{},
+	}
+}
+
+func (KV) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("key").Unique(),
 	}
 }
