@@ -30,9 +30,25 @@ var (
 			},
 		},
 	}
+	// NodesColumns holds the columns for the "nodes" table.
+	NodesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString},
+		{Name: "ip", Type: field.TypeString},
+		{Name: "port", Type: field.TypeInt},
+		{Name: "comment", Type: field.TypeString},
+	}
+	// NodesTable holds the schema information for the "nodes" table.
+	NodesTable = &schema.Table{
+		Name:       "nodes",
+		Columns:    NodesColumns,
+		PrimaryKey: []*schema.Column{NodesColumns[0]},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		KvsTable,
+		NodesTable,
 	}
 )
 

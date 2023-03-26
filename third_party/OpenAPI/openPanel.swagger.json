@@ -18,6 +18,9 @@
     },
     {
       "name": "InitializeService"
+    },
+    {
+      "name": "LinkStateService"
     }
   ],
   "consumes": [
@@ -117,19 +120,20 @@
         },
         "token": {
           "type": "string"
+        },
+        "csr": {
+          "type": "string",
+          "format": "byte"
         }
       }
     },
     "openPanelInitializeResponse": {
       "type": "object",
       "properties": {
-        "clientCert": {
-          "type": "string"
-        },
         "clientPrivateKey": {
           "type": "string"
         },
-        "CACert": {
+        "clusterCACert": {
           "type": "string"
         },
         "nodes": {
@@ -138,6 +142,21 @@
             "type": "object",
             "$ref": "#/definitions/entpbNode"
           }
+        }
+      }
+    },
+    "openPanelLinkState": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "latency": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },

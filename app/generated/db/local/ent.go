@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/openPanel/core/app/generated/db/local/kv"
+	"github.com/openPanel/core/app/generated/db/local/node"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -65,7 +66,8 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
-		kv.Table: kv.ValidColumn,
+		kv.Table:   kv.ValidColumn,
+		node.Table: node.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

@@ -3,7 +3,7 @@ package bootstrap
 func connectToSharedDatabase() {
 }
 
-func createInitSharedDatabase() {
+func createSharedDatabase() {
 }
 
 func commonInit() {

@@ -1,0 +1,27 @@
+syntax = "proto3";
+package openPanel;
+
+import "google/protobuf/empty.proto";
+
+message LinkState {
+  string from = 1;
+  string to = 2;
+  int32 latency = 3;
+}
+
+message LinkStateUpdate {
+  repeated LinkState link_state = 1;
+}
+
+message LinkStateRequest {
+  string node = 1;
+}
+
+message LinkStateResponse {
+  repeated LinkState link_state = 1;
+}
+
+service LinkStateService {
+  // Update the link state of the node. Part of a broadcast.
+  rpc UpdateLinkState(LinkStateUpdate) returns (google.protobuf.Empty);
+}

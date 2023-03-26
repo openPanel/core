@@ -7,6 +7,7 @@ import (
 
 	"github.com/openPanel/core/app/db/schema/local"
 	"github.com/openPanel/core/app/generated/db/local/kv"
+	"github.com/openPanel/core/app/generated/db/local/node"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -30,4 +31,13 @@ func init() {
 	kv.DefaultUpdatedAt = kvDescUpdatedAt.Default.(func() time.Time)
 	// kv.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	kv.UpdateDefaultUpdatedAt = kvDescUpdatedAt.UpdateDefault.(func() time.Time)
+	nodeMixin := local.Node{}.Mixin()
+	nodeMixinFields0 := nodeMixin[0].Fields()
+	_ = nodeMixinFields0
+	nodeFields := local.Node{}.Fields()
+	_ = nodeFields
+	// nodeDescCreatedAt is the schema descriptor for created_at field.
+	nodeDescCreatedAt := nodeMixinFields0[0].Descriptor()
+	// node.DefaultCreatedAt holds the default value on creation for the created_at field.
+	node.DefaultCreatedAt = nodeDescCreatedAt.Default.(func() time.Time)
 }

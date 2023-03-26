@@ -14,3 +14,12 @@ func RequireDataFile(name string, flag int, perm os.FileMode) (*os.File, error) 
 	}
 	return os.OpenFile(dirPath+string(os.PathSeparator)+name, flag, perm)
 }
+
+// RequireDataDir creates a directory in the data directory.
+func RequireDataDir(dir string) (string, error) {
+	dirPath := constant.DefaultDataDir + string(os.PathSeparator) + dir
+	if err := os.MkdirAll(dirPath, 0755); err != nil {
+		return "", err
+	}
+	return dirPath, nil
+}

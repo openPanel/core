@@ -8,12 +8,14 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/openPanel/core/app/generated/db/local/migrate"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/openPanel/core/app/generated/db/local/kv"
+	"github.com/openPanel/core/app/generated/db/local/node"
 )
 
 // Client is the client that holds all ent builders.
@@ -23,6 +25,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// KV is the client for interacting with the KV builders.
 	KV *KVClient
+	// Node is the client for interacting with the Node builders.
+	Node *NodeClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -37,6 +41,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.KV = NewKVClient(c.config)
+	c.Node = NewNodeClient(c.config)
 }
 
 type (
@@ -120,6 +125,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:    ctx,
 		config: cfg,
 		KV:     NewKVClient(cfg),
+		Node:   NewNodeClient(cfg),
 	}, nil
 }
 
@@ -140,6 +146,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:    ctx,
 		config: cfg,
 		KV:     NewKVClient(cfg),
+		Node:   NewNodeClient(cfg),
 	}, nil
 }
 
@@ -169,12 +176,14 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.KV.Use(hooks...)
+	c.Node.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.KV.Intercept(interceptors...)
+	c.Node.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -182,6 +191,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *KVMutation:
 		return c.KV.mutate(ctx, m)
+	case *NodeMutation:
+		return c.Node.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("local: unknown mutation type %T", m)
 	}
@@ -305,12 +316,130 @@ func (c *KVClient) mutate(ctx context.Context, m *KVMutation) (Value, error) {
 	}
 }
 
+// NodeClient is a client for the Node schema.
+type NodeClient struct {
+	config
+}
+
+// NewNodeClient returns a client for the Node from the given config.
+func NewNodeClient(c config) *NodeClient {
+	return &NodeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `node.Hooks(f(g(h())))`.
+func (c *NodeClient) Use(hooks ...Hook) {
+	c.hooks.Node = append(c.hooks.Node, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `node.Intercept(f(g(h())))`.
+func (c *NodeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Node = append(c.inters.Node, interceptors...)
+}
+
+// Create returns a builder for creating a Node entity.
+func (c *NodeClient) Create() *NodeCreate {
+	mutation := newNodeMutation(c.config, OpCreate)
+	return &NodeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Node entities.
+func (c *NodeClient) CreateBulk(builders ...*NodeCreate) *NodeCreateBulk {
+	return &NodeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Node.
+func (c *NodeClient) Update() *NodeUpdate {
+	mutation := newNodeMutation(c.config, OpUpdate)
+	return &NodeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *NodeClient) UpdateOne(n *Node) *NodeUpdateOne {
+	mutation := newNodeMutation(c.config, OpUpdateOne, withNode(n))
+	return &NodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *NodeClient) UpdateOneID(id uuid.UUID) *NodeUpdateOne {
+	mutation := newNodeMutation(c.config, OpUpdateOne, withNodeID(id))
+	return &NodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Node.
+func (c *NodeClient) Delete() *NodeDelete {
+	mutation := newNodeMutation(c.config, OpDelete)
+	return &NodeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *NodeClient) DeleteOne(n *Node) *NodeDeleteOne {
+	return c.DeleteOneID(n.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *NodeClient) DeleteOneID(id uuid.UUID) *NodeDeleteOne {
+	builder := c.Delete().Where(node.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &NodeDeleteOne{builder}
+}
+
+// Query returns a query builder for Node.
+func (c *NodeClient) Query() *NodeQuery {
+	return &NodeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeNode},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Node entity by its id.
+func (c *NodeClient) Get(ctx context.Context, id uuid.UUID) (*Node, error) {
+	return c.Query().Where(node.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *NodeClient) GetX(ctx context.Context, id uuid.UUID) *Node {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *NodeClient) Hooks() []Hook {
+	return c.hooks.Node
+}
+
+// Interceptors returns the client interceptors.
+func (c *NodeClient) Interceptors() []Interceptor {
+	return c.inters.Node
+}
+
+func (c *NodeClient) mutate(ctx context.Context, m *NodeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&NodeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&NodeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&NodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&NodeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("local: unknown Node mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		KV []ent.Hook
+		KV, Node []ent.Hook
 	}
 	inters struct {
-		KV []ent.Interceptor
+		KV, Node []ent.Interceptor
 	}
 )

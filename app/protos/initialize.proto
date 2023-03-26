@@ -11,13 +11,13 @@ message InitializeRequest {
   int32 port = 2;
   string serverID = 3;
   string token = 4;
+  bytes csr = 5;
 }
 
 message InitializeResponse {
-  string clientCert = 1;
-  string clientPrivateKey = 2;
-  string CACert = 3;
-  repeated entpb.Node nodes = 4;
+  string clientPrivateKey = 1;
+  string clusterCACert = 2;
+  repeated entpb.Node nodes = 3;
 }
 
 service InitializeService {

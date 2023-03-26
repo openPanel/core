@@ -8,3 +8,6 @@ import (
 
 // KV is the predicate function for kv builders.
 type KV func(*sql.Selector)
+
+// Node is the predicate function for node builders.
+type Node func(*sql.Selector)
