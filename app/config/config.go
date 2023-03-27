@@ -4,33 +4,25 @@ package config
 
 import (
 	"context"
+	"encoding/json"
 
-	"github.com/openPanel/core/app/db/db"
-	"github.com/openPanel/core/app/generated/db/local"
-	"github.com/openPanel/core/app/generated/db/local/kv"
+	"github.com/openPanel/core/app/db/repo/local"
 )
 
-func Load(key Key) (string, error) {
-	v, err := db.GetLocalDb().KV.Query().
-		Where(kv.Key(string(key))).
-		Only(context.Background())
+func Load(key Key) (any, error) {
+	v, err := local.KVRepo.Get(context.Background(), string(key))
 	if err != nil {
-		if local.IsNotFound(err) {
-			return "", nil
-		} else {
-			return "", err
-		}
+		return "", err
 	}
-	return v.Value, nil
+	var ret any
+	err = json.Unmarshal([]byte(v), &ret)
+	return ret, err
 }
 
-func Save(key Key, value string) error {
-	err := db.GetLocalDb().KV.
-		Create().
-		SetKey(string(key)).
-		SetValue(value).
-		OnConflictColumns(kv.FieldKey).
-		UpdateValue().
-		Exec(context.Background())
-	return err
+func Save(key Key, value any) error {
+	v, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	return local.KVRepo.Set(context.Background(), string(key), string(v))
 }

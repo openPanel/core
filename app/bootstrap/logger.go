@@ -9,7 +9,7 @@ import (
 
 	"github.com/openPanel/core/app/global"
 	customLog "github.com/openPanel/core/app/global/log"
-	"github.com/openPanel/core/app/tools/fileUtils"
+	"github.com/openPanel/core/app/tools/utils/fileUtils"
 )
 
 func initLogger() {
@@ -40,6 +40,8 @@ func initLogger() {
 	if global.IsDev() {
 		logger = logger.WithOptions(zap.Development())
 	}
+
+	logger.Info("Logger initialized at " + logFile.Name())
 
 	customLog.UpdateLogger(logger.Sugar())
 }

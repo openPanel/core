@@ -1,8 +1,12 @@
 package dqlite
 
 import (
+	"net"
+
 	"google.golang.org/grpc"
 )
+
+var _ net.Conn = (*ServerRpcConn)(nil)
 
 type ServerRpcConn struct {
 	rpcConn

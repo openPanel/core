@@ -1,5 +1,10 @@
 package constant
 
-const DefaultListenIp = "0.0.0.0"
+import (
+	"net"
+)
+
+var DefaultListenIp = net.IPv4zero
+
 const DefaultListenPort = 40123
 const DefaultDataDir = "data"

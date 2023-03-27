@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,14 +20,16 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	InitializeService_Initialize_FullMethodName = "/openPanel.InitializeService/Initialize"
+	InitializeService_AddNewNode_FullMethodName   = "/openPanel.InitializeService/AddNewNode"
+	InitializeService_GetNodesInfo_FullMethodName = "/openPanel.InitializeService/GetNodesInfo"
 )
 
 // InitializeServiceClient is the client API for InitializeService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InitializeServiceClient interface {
-	Initialize(ctx context.Context, in *InitializeRequest, opts ...grpc.CallOption) (*InitializeResponse, error)
+	AddNewNode(ctx context.Context, in *AddNewNodeRequest, opts ...grpc.CallOption) (*AddNewNodeResponse, error)
+	GetNodesInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetNodesInfoResponse, error)
 }
 
 type initializeServiceClient struct {
@@ -37,9 +40,18 @@ func NewInitializeServiceClient(cc grpc.ClientConnInterface) InitializeServiceCl
 	return &initializeServiceClient{cc}
 }
 
-func (c *initializeServiceClient) Initialize(ctx context.Context, in *InitializeRequest, opts ...grpc.CallOption) (*InitializeResponse, error) {
-	out := new(InitializeResponse)
-	err := c.cc.Invoke(ctx, InitializeService_Initialize_FullMethodName, in, out, opts...)
+func (c *initializeServiceClient) AddNewNode(ctx context.Context, in *AddNewNodeRequest, opts ...grpc.CallOption) (*AddNewNodeResponse, error) {
+	out := new(AddNewNodeResponse)
+	err := c.cc.Invoke(ctx, InitializeService_AddNewNode_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *initializeServiceClient) GetNodesInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetNodesInfoResponse, error) {
+	out := new(GetNodesInfoResponse)
+	err := c.cc.Invoke(ctx, InitializeService_GetNodesInfo_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -50,15 +62,19 @@ func (c *initializeServiceClient) Initialize(ctx context.Context, in *Initialize
 // All implementations should embed UnimplementedInitializeServiceServer
 // for forward compatibility
 type InitializeServiceServer interface {
-	Initialize(context.Context, *InitializeRequest) (*InitializeResponse, error)
+	AddNewNode(context.Context, *AddNewNodeRequest) (*AddNewNodeResponse, error)
+	GetNodesInfo(context.Context, *emptypb.Empty) (*GetNodesInfoResponse, error)
 }
 
 // UnimplementedInitializeServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedInitializeServiceServer struct {
 }
 
-func (UnimplementedInitializeServiceServer) Initialize(context.Context, *InitializeRequest) (*InitializeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Initialize not implemented")
+func (UnimplementedInitializeServiceServer) AddNewNode(context.Context, *AddNewNodeRequest) (*AddNewNodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddNewNode not implemented")
+}
+func (UnimplementedInitializeServiceServer) GetNodesInfo(context.Context, *emptypb.Empty) (*GetNodesInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNodesInfo not implemented")
 }
 
 // UnsafeInitializeServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -72,20 +88,38 @@ func RegisterInitializeServiceServer(s grpc.ServiceRegistrar, srv InitializeServ
 	s.RegisterService(&InitializeService_ServiceDesc, srv)
 }
 
-func _InitializeService_Initialize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(InitializeRequest)
+func _InitializeService_AddNewNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddNewNodeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InitializeServiceServer).Initialize(ctx, in)
+		return srv.(InitializeServiceServer).AddNewNode(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: InitializeService_Initialize_FullMethodName,
+		FullMethod: InitializeService_AddNewNode_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InitializeServiceServer).Initialize(ctx, req.(*InitializeRequest))
+		return srv.(InitializeServiceServer).AddNewNode(ctx, req.(*AddNewNodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InitializeService_GetNodesInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InitializeServiceServer).GetNodesInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InitializeService_GetNodesInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InitializeServiceServer).GetNodesInfo(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -98,8 +132,12 @@ var InitializeService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*InitializeServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Initialize",
-			Handler:    _InitializeService_Initialize_Handler,
+			MethodName: "AddNewNode",
+			Handler:    _InitializeService_AddNewNode_Handler,
+		},
+		{
+			MethodName: "GetNodesInfo",
+			Handler:    _InitializeService_GetNodesInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

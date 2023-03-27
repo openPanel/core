@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/spf13/cobra"
 
 	"github.com/openPanel/core/app/bootstrap"
+	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
 var startLongHelp = `The start command is used to launch either a standalone application or the first node of a cluster.
@@ -16,8 +19,15 @@ var startCmd = &cobra.Command{
 	Run:   startAction,
 }
 
-func startAction(_ *cobra.Command, _ []string) {
-	bootstrap.Start()
+func startAction(cmd *cobra.Command, _ []string) {
+	if !listenIp.IsUnspecified() {
+		err := netUtils.CheckPublicIp(*listenIp)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	bootstrap.Start(*listenIp, *listenPort)
 }
 
 func init() {

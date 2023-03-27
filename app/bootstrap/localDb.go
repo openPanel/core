@@ -12,7 +12,7 @@ import (
 	"github.com/openPanel/core/app/generated/db/local"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
-	"github.com/openPanel/core/app/tools/fileUtils"
+	"github.com/openPanel/core/app/tools/utils/fileUtils"
 )
 
 func getInitLocalDatabase() *local.Client {
@@ -39,9 +39,11 @@ func getInitLocalDatabase() *local.Client {
 		log.Fatalf("Failed to create local database schema: %s", err)
 	}
 
+	log.Infof("Local database initialized at %s", path)
+
 	return client
 }
 
-func localDatabaseBootstrap() {
+func initLocalDatabase() {
 	global.App.DbLocal = getInitLocalDatabase()
 }

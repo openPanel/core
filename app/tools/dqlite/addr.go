@@ -1,5 +1,11 @@
 package dqlite
 
+import (
+	"net"
+)
+
+var _ net.Addr = (*RPCConnAddr)(nil)
+
 type RPCConnAddr struct {
 	name string
 }

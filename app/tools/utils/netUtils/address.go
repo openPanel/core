@@ -6,8 +6,20 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/openPanel/core/app/constant"
 )
+
+func CheckPublicIp(ip net.IP) error {
+	if !ip.IsGlobalUnicast() {
+		return errors.New("IP address is not global unicast address " + ip.String())
+	}
+	if ip.IsPrivate() {
+		return errors.New("IP address is private " + ip.String())
+	}
+	return nil
+}
 
 func AssertPublicAddress(address string) (net.IP, int) {
 	parts := strings.Split(address, ":")
@@ -17,17 +29,15 @@ func AssertPublicAddress(address string) (net.IP, int) {
 
 	ip := net.ParseIP(parts[0])
 	if ip == nil {
-		panic("Invalid IP address " + parts[0])
+		log.Fatal("Invalid IP address " + parts[0])
 	}
 
-	if !ip.IsGlobalUnicast() {
-		log.Println("IP address is not global unicast address " + ip.String())
+	err := CheckPublicIp(ip)
+	if err != nil {
+		log.Fatal(err)
 	}
-	if ip.IsPrivate() {
-		log.Println("IP address is private " + ip.String())
-	}
+
 	var port int
-	var err error
 
 	if len(parts) == 2 {
 		port, err = strconv.Atoi(parts[1])

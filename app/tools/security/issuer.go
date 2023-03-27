@@ -23,6 +23,7 @@ func GenerateCACertificate() (cert []byte, key []byte, err error) {
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(25, 0, 0),
 		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 		IsCA:                  true,
 		MaxPathLen:            2,
@@ -31,7 +32,7 @@ func GenerateCACertificate() (cert []byte, key []byte, err error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	key, err = x509.MarshalECPrivateKey(caPrivateKey)
+	key, err = x509.MarshalPKCS8PrivateKey(caPrivateKey)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -54,7 +55,7 @@ func GenerateCertificateSigningRequest(commonName string) (csr []byte, key []byt
 	if err != nil {
 		return nil, nil, err
 	}
-	key, err = x509.MarshalECPrivateKey(privateKey)
+	key, err = x509.MarshalPKCS8PrivateKey(privateKey)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -62,7 +63,7 @@ func GenerateCertificateSigningRequest(commonName string) (csr []byte, key []byt
 }
 
 func SignCsr(caCertBytes, caKeyBytes, csrBytes []byte) ([]byte, error) {
-	caKey, err := x509.ParseECPrivateKey(caKeyBytes)
+	caKey, err := x509.ParsePKCS8PrivateKey(caKeyBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +87,7 @@ func SignCsr(caCertBytes, caKeyBytes, csrBytes []byte) ([]byte, error) {
 		NotBefore:    time.Now(),
 		NotAfter:     caCert.NotAfter,
 		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 	}
 	cert, err := x509.CreateCertificate(rand.Reader, &template, caCert, csr.PublicKey, caKey)
 	if err != nil {

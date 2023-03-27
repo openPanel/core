@@ -31,15 +31,37 @@
   ],
   "paths": {
     "/initialize": {
-      "post": {
-        "summary": "Join a cluster",
-        "description": "A node try to initialize to the cluster",
-        "operationId": "InitializeService_Initialize",
+      "get": {
+        "summary": "Get nodes info",
+        "description": "Get all nodes info in the cluster",
+        "operationId": "InitializeService_GetNodesInfo",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/openPanelInitializeResponse"
+              "$ref": "#/definitions/openPanelGetNodesInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Initialize"
+        ]
+      },
+      "post": {
+        "summary": "Join a cluster",
+        "description": "A node try to initialize to the cluster",
+        "operationId": "InitializeService_AddNewNode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/openPanelAddNewNodeResponse"
             }
           },
           "default": {
@@ -55,7 +77,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/openPanelInitializeRequest"
+              "$ref": "#/definitions/openPanelAddNewNodeRequest"
             }
           }
         ],
@@ -105,7 +127,7 @@
         }
       }
     },
-    "openPanelInitializeRequest": {
+    "openPanelAddNewNodeRequest": {
       "type": "object",
       "properties": {
         "ip": {
@@ -127,7 +149,7 @@
         }
       }
     },
-    "openPanelInitializeResponse": {
+    "openPanelAddNewNodeResponse": {
       "type": "object",
       "properties": {
         "clientPrivateKey": {
@@ -136,6 +158,18 @@
         "clusterCACert": {
           "type": "string"
         },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/entpbNode"
+          }
+        }
+      }
+    },
+    "openPanelGetNodesInfoResponse": {
+      "type": "object",
+      "properties": {
         "nodes": {
           "type": "array",
           "items": {

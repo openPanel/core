@@ -5,8 +5,8 @@ import (
 	"net"
 )
 
-func dqliteDialFunction(ctx context.Context, address string) (net.Conn, error) {
+func DialFunction(ctx context.Context, address string) (net.Conn, error) {
 	panic("implement me") // TODO
 }
 
-var dqliteAcceptChan chan net.Conn
+var AcceptChan chan net.Conn

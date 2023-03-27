@@ -14,8 +14,6 @@ type Tx struct {
 	config
 	// KV is the client for interacting with the KV builders.
 	KV *KVClient
-	// Node is the client for interacting with the Node builders.
-	Node *NodeClient
 
 	// lazily loaded.
 	client     *Client
@@ -148,7 +146,6 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.KV = NewKVClient(tx.config)
-	tx.Node = NewNodeClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

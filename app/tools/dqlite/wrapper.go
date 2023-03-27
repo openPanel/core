@@ -11,7 +11,7 @@ import (
 
 	"github.com/openPanel/core/app/generated/db/shared"
 	"github.com/openPanel/core/app/global/log"
-	"github.com/openPanel/core/app/tools/fileUtils"
+	"github.com/openPanel/core/app/tools/utils/fileUtils"
 )
 
 const SharedDatabaseDSN = "shared?_fk=1"
@@ -23,7 +23,7 @@ var sharedClient *shared.Client
 func createSharedDatabase(serverAddrs *[]string) (*shared.Client, error) {
 	options := []dqliteApp.Option{
 		dqliteApp.WithLogFunc(getDqliteLogger()),
-		dqliteApp.WithExternalConn(dqliteDialFunction, dqliteAcceptChan),
+		dqliteApp.WithExternalConn(DialFunction, AcceptChan),
 	}
 	if serverAddrs != nil {
 		options = append(options, dqliteApp.WithCluster(*serverAddrs))

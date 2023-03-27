@@ -20,20 +20,20 @@ func GetPublicIP() (ips []net.IP, err error) {
 	}
 	if len(localIPs) > 0 {
 		return localIPs, nil
-	} else {
-		log.Debug("No public IP found from local network interfaces")
-		cfip, err := getPublicIPWithCloudflare()
-		if err == nil {
-			return []net.IP{cfip}, nil
-		}
-		log.Error("Failed to get public IP from Cloudflare", zap.Error(err))
-		ipifyip, err := getPublicIPWithIpify()
-		if err == nil {
-			return []net.IP{ipifyip}, nil
-		}
-		log.Fatal("Failed to get public IP from ipify", zap.Error(err))
-		return nil, errors.New("failed to get public IP")
 	}
+
+	log.Debug("No public IP found from local network interfaces")
+	cfip, err := getPublicIPWithCloudflare()
+	if err == nil {
+		return []net.IP{cfip}, nil
+	}
+	log.Error("Failed to get public IP from Cloudflare", zap.Error(err))
+	ipifyip, err := getPublicIPWithIpify()
+	if err == nil {
+		return []net.IP{ipifyip}, nil
+	}
+	log.Fatal("Failed to get public IP from ipify", zap.Error(err))
+	return nil, errors.New("failed to get public IP")
 }
 
 func getPublicIPsFromLocal() (ips []net.IP, err error) {
