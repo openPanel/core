@@ -7,7 +7,7 @@ import (
 	"errors"
 )
 
-func GenerateTLSConfig(certBytes, keyBytes, caCertBytes []byte) (*tls.Config, error) {
+func loadServerCert(certBytes, keyBytes []byte) (*tls.Certificate, error) {
 	certPEM := pem.EncodeToMemory(&pem.Block{
 		Type:  "CERTIFICATE",
 		Bytes: certBytes,
@@ -28,6 +28,14 @@ func GenerateTLSConfig(certBytes, keyBytes, caCertBytes []byte) (*tls.Config, er
 	if err != nil {
 		return nil, err
 	}
+	return &serverCert, nil
+}
+
+func GenerateRPCTLSConfig(certBytes, keyBytes, caCertBytes []byte) (*tls.Config, error) {
+	serverCert, err := loadServerCert(certBytes, keyBytes)
+	if err != nil {
+		return nil, err
+	}
 
 	caCert, err := x509.ParseCertificate(caCertBytes)
 	if err != nil {
@@ -38,9 +46,21 @@ func GenerateTLSConfig(certBytes, keyBytes, caCertBytes []byte) (*tls.Config, er
 	certPool.AddCert(caCert)
 
 	return &tls.Config{
-		Certificates: []tls.Certificate{serverCert},
+		Certificates: []tls.Certificate{*serverCert},
 		RootCAs:      certPool.Clone(),
 		ClientCAs:    certPool.Clone(),
 		ClientAuth:   tls.RequireAndVerifyClientCert,
+	}, nil
+}
+
+func GenerateHTTPTLSConfig(certBytes, keyBytes []byte) (*tls.Config, error) {
+	serverCert, err := loadServerCert(certBytes, keyBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tls.Config{
+		Certificates: []tls.Certificate{*serverCert},
+		ClientAuth:   tls.NoClientCert,
 	}, nil
 }

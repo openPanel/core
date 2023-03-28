@@ -10,6 +10,8 @@ type application struct {
 	DbLocal  *local.Client
 	DbShared *shared.Client
 
+	NodeInfo LocalNodeInfo
+
 	Mode buildType.Mode
 }
 

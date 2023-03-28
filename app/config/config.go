@@ -9,14 +9,14 @@ import (
 	"github.com/openPanel/core/app/db/repo/local"
 )
 
-func Load(key Key) (any, error) {
+func Load(key Key, value any) error {
 	v, err := local.KVRepo.Get(context.Background(), string(key))
 	if err != nil {
-		return "", err
+		value = nil
+		return err
 	}
-	var ret any
-	err = json.Unmarshal([]byte(v), &ret)
-	return ret, err
+	err = json.Unmarshal([]byte(v), &value)
+	return err
 }
 
 func Save(key Key, value any) error {

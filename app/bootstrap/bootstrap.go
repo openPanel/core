@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"net"
 
+	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/tools/security"
 )
@@ -22,6 +23,11 @@ func Start(listenIp net.IP, listenPort int) {
 		log.Fatalf("Failed to sign local certificate: %v", err)
 	}
 
+	node, err := saveNodeInfo(meta.ServerId, meta.ServerIp, meta.ServerPort, localServerCert, meta.PrivateKey)
+	if err != nil {
+		log.Fatalf("Failed to save node info: %v", err)
+	}
+	global.App.NodeInfo = node
 }
 
 // Join a cluster

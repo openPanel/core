@@ -14,14 +14,20 @@ message LinkStateUpdate {
 }
 
 message LinkStateRequest {
-  string node = 1;
+  string nodeId = 1;
 }
 
 message LinkStateResponse {
   repeated LinkState link_state = 1;
 }
 
+message NodeUpdateRequest {
+  string nodeId = 1;
+}
+
 service LinkStateService {
   // Update the link state of the node. Part of a broadcast.
   rpc UpdateLinkState(LinkStateUpdate) returns (google.protobuf.Empty);
+  // Indicate that the info of this node should be reload.
+  rpc NotifyNodeUpdate(NodeUpdateRequest) returns (google.protobuf.Empty);
 }
