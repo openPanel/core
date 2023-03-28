@@ -28,6 +28,8 @@ func Start(listenIp net.IP, listenPort int) {
 		log.Fatalf("Failed to save node info: %v", err)
 	}
 	global.App.NodeInfo = node
+
+	createEmptyNetGraph()
 }
 
 // Join a cluster

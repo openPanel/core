@@ -6,6 +6,7 @@ require (
 	entgo.io/contrib v0.3.5
 	entgo.io/ent v0.11.10
 	github.com/canonical/go-dqlite v1.11.7
+	github.com/go-co-op/gocron v1.19.0
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.2
 	github.com/mattn/go-sqlite3 v1.14.16
@@ -46,6 +47,7 @@ require (
 	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/qtls-go1-19 v0.2.1 // indirect
 	github.com/quic-go/qtls-go1-20 v0.1.1 // indirect
+	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/zclconf/go-cty v1.8.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect

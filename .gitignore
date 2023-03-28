@@ -40,3 +40,5 @@ out
 *.out
 go.work
 vendor/
+
+t/
