@@ -9,10 +9,9 @@ import (
 var scheduler = gocron.NewScheduler(time.UTC)
 
 func Start() {
-	scheduler.
-		EveryRandom(10, 20).
-		Minute().
-		StartImmediately()
+	go scheduler.StartBlocking()
+}
 
-	scheduler.Len()
+func Op(fn func(s *gocron.Scheduler)) {
+	fn(scheduler)
 }

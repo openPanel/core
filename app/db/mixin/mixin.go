@@ -7,6 +7,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
+
+	"github.com/openPanel/core/app/constant"
 )
 
 type TimeCreateMixin struct {
@@ -18,7 +20,7 @@ func (TimeCreateMixin) Fields() []ent.Field {
 		field.Time("created_at").
 			Immutable().
 			Default(time.Now).
-			Annotations(entproto.Field(MIXIN_PROTO_ID_START)),
+			Annotations(entproto.Field(constant.ProtoMixinIdStart)),
 	}
 }
 
@@ -31,6 +33,6 @@ func (TimeUpdateMixin) Fields() []ent.Field {
 		field.Time("updated_at").
 			Default(time.Now).
 			UpdateDefault(time.Now).
-			Annotations(entproto.Field(MIXIN_PROTO_ID_START + 1)),
+			Annotations(entproto.Field(constant.ProtoMixinIdStart + 1)),
 	}
 }

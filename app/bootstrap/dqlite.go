@@ -1,1 +1,5 @@
 package bootstrap
+
+func initDqlite() {
+
+}

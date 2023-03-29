@@ -50,6 +50,7 @@ func GenerateRPCTLSConfig(certBytes, keyBytes, caCertBytes []byte) (*tls.Config,
 		RootCAs:      certPool.Clone(),
 		ClientCAs:    certPool.Clone(),
 		ClientAuth:   tls.RequireAndVerifyClientCert,
+		NextProtos:   []string{"qtls"},
 	}, nil
 }
 

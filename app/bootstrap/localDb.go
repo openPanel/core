@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent/dialect"
 	_ "github.com/mattn/go-sqlite3"
 
+	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/generated/db/local"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
@@ -16,8 +17,7 @@ import (
 )
 
 func getInitLocalDatabase() *local.Client {
-	const filename = "core.local.db"
-	file, err := fileUtils.RequireDataFile(filename, os.O_RDWR|os.O_CREATE, 0644)
+	file, err := fileUtils.RequireDataFile(constant.DefaultLocalSqliteFilename, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatalf("Failed to open local database file: %s", err)
 	}

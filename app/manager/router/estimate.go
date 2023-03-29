@@ -11,8 +11,7 @@ import (
 var EstimateLatenciesCallback func(map[Edge]int) = nil
 
 func estimateLatencies() {
-	nodesLock.Lock()
-	defer nodesLock.Unlock()
+	nodesLock.RLock()
 
 	wg := sync.WaitGroup{}
 	infos := map[Edge]int{}
@@ -39,6 +38,9 @@ func estimateLatencies() {
 	}
 
 	wg.Wait()
+
+	nodesLock.RUnlock()
+
 	updateRouterInfo(infos)
 	updateRouterDecision()
 

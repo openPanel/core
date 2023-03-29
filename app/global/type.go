@@ -11,3 +11,8 @@ type LocalNodeInfo struct {
 	ServerCert       []byte
 	ServerPrivateKey []byte
 }
+
+type ClusterInfo struct {
+	CaCert []byte
+	CaKey  []byte
+}

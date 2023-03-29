@@ -2,4 +2,8 @@
 
 package buildType
 
-var BuildMode = ModeProd
+import (
+	"github.com/openPanel/core/app/constant"
+)
+
+var BuildMode = constant.ModeProd

@@ -23,6 +23,7 @@ message AddNewNodeResponse {
 
 message GetNodesInfoResponse {
   repeated entpb.Node nodes = 1;
+  string token = 2;
 }
 
 service InitializeService {

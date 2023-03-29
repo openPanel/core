@@ -20,7 +20,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	LinkStateService_UpdateLinkState_FullMethodName = "/openPanel.LinkStateService/UpdateLinkState"
+	LinkStateService_UpdateLinkState_FullMethodName  = "/openPanel.LinkStateService/UpdateLinkState"
+	LinkStateService_NotifyNodeUpdate_FullMethodName = "/openPanel.LinkStateService/NotifyNodeUpdate"
 )
 
 // LinkStateServiceClient is the client API for LinkStateService service.
@@ -29,6 +30,8 @@ const (
 type LinkStateServiceClient interface {
 	// Update the link state of the node. Part of a broadcast.
 	UpdateLinkState(ctx context.Context, in *LinkStateUpdate, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Indicate that the info of this node should be reload.
+	NotifyNodeUpdate(ctx context.Context, in *NodeUpdateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type linkStateServiceClient struct {
@@ -48,12 +51,23 @@ func (c *linkStateServiceClient) UpdateLinkState(ctx context.Context, in *LinkSt
 	return out, nil
 }
 
+func (c *linkStateServiceClient) NotifyNodeUpdate(ctx context.Context, in *NodeUpdateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, LinkStateService_NotifyNodeUpdate_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LinkStateServiceServer is the server API for LinkStateService service.
 // All implementations should embed UnimplementedLinkStateServiceServer
 // for forward compatibility
 type LinkStateServiceServer interface {
 	// Update the link state of the node. Part of a broadcast.
 	UpdateLinkState(context.Context, *LinkStateUpdate) (*emptypb.Empty, error)
+	// Indicate that the info of this node should be reload.
+	NotifyNodeUpdate(context.Context, *NodeUpdateRequest) (*emptypb.Empty, error)
 }
 
 // UnimplementedLinkStateServiceServer should be embedded to have forward compatible implementations.
@@ -62,6 +76,9 @@ type UnimplementedLinkStateServiceServer struct {
 
 func (UnimplementedLinkStateServiceServer) UpdateLinkState(context.Context, *LinkStateUpdate) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateLinkState not implemented")
+}
+func (UnimplementedLinkStateServiceServer) NotifyNodeUpdate(context.Context, *NodeUpdateRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NotifyNodeUpdate not implemented")
 }
 
 // UnsafeLinkStateServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -93,6 +110,24 @@ func _LinkStateService_UpdateLinkState_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LinkStateService_NotifyNodeUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NodeUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LinkStateServiceServer).NotifyNodeUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LinkStateService_NotifyNodeUpdate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LinkStateServiceServer).NotifyNodeUpdate(ctx, req.(*NodeUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LinkStateService_ServiceDesc is the grpc.ServiceDesc for LinkStateService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -103,6 +138,10 @@ var LinkStateService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateLinkState",
 			Handler:    _LinkStateService_UpdateLinkState_Handler,
+		},
+		{
+			MethodName: "NotifyNodeUpdate",
+			Handler:    _LinkStateService_NotifyNodeUpdate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

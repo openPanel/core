@@ -1,4 +1,4 @@
-package qNet
+package quicNet
 
 import (
 	"context"

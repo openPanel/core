@@ -9,27 +9,25 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 
+	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/generated/db/shared"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/tools/utils/fileUtils"
 )
 
-const SharedDatabaseDSN = "shared?_fk=1"
-const DataDir = "dqlite"
-
 var createOnce = sync.Once{}
 var sharedClient *shared.Client
 
-func createSharedDatabase(serverAddrs *[]string) (*shared.Client, error) {
+func createSharedDatabase(clusterAddrs *[]string) (*shared.Client, error) {
 	options := []dqliteApp.Option{
 		dqliteApp.WithLogFunc(getDqliteLogger()),
 		dqliteApp.WithExternalConn(DialFunction, AcceptChan),
 	}
-	if serverAddrs != nil {
-		options = append(options, dqliteApp.WithCluster(*serverAddrs))
+	if clusterAddrs != nil {
+		options = append(options, dqliteApp.WithCluster(*clusterAddrs))
 	}
 
-	dqliteDir, err := fileUtils.RequireDataDir(DataDir)
+	dqliteDir, err := fileUtils.RequireDataDir(constant.DqliteDataDir)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +37,7 @@ func createSharedDatabase(serverAddrs *[]string) (*shared.Client, error) {
 		return nil, err
 	}
 
-	db, err := app.Open(context.Background(), SharedDatabaseDSN)
+	db, err := app.Open(context.Background(), constant.SharedDatabaseDSN)
 	if err != nil {
 		return nil, err
 	}

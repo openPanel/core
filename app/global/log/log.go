@@ -2,6 +2,8 @@ package log
 
 import (
 	"go.uber.org/zap"
+
+	"github.com/openPanel/core/app/global"
 )
 
 var (
@@ -45,6 +47,8 @@ var (
 
 // UpdateLogger helpful for late binding
 func UpdateLogger(logger *zap.SugaredLogger) {
+	global.App.Logger = logger.Desugar()
+
 	Named = logger.Named
 	With = logger.With
 

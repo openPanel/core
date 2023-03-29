@@ -176,6 +176,9 @@
             "type": "object",
             "$ref": "#/definitions/entpbNode"
           }
+        },
+        "token": {
+          "type": "string"
         }
       }
     },

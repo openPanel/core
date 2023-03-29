@@ -13,12 +13,12 @@ func Start(listenIp net.IP, listenPort int) {
 	commonInit()
 	meta := generateNewNodeMeta(listenIp, listenPort)
 
-	caCert, key, err := security.GenerateCACertificate()
+	caCert, caKey, err := security.GenerateCACertificate()
 	if err != nil {
 		log.Fatalf("Failed to generate CA certificate: %v", err)
 	}
 
-	localServerCert, err := security.SignCsr(caCert, key, meta.Csr)
+	localServerCert, err := security.SignCsr(caCert, caKey, meta.Csr)
 	if err != nil {
 		log.Fatalf("Failed to sign local certificate: %v", err)
 	}
@@ -30,6 +30,11 @@ func Start(listenIp net.IP, listenPort int) {
 	global.App.NodeInfo = node
 
 	createEmptyNetGraph()
+
+	global.App.ClusterInfo = global.ClusterInfo{
+		CaCert: caCert,
+		CaKey:  caKey,
+	}
 }
 
 // Join a cluster

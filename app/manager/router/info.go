@@ -2,7 +2,10 @@ package router
 
 import (
 	"net"
+	"strconv"
 	"sync"
+
+	"github.com/pkg/errors"
 )
 
 type Edge struct {
@@ -17,6 +20,10 @@ var riLock = sync.RWMutex{}
 type Address struct {
 	Ip   net.IP
 	Port int
+}
+
+func (a Address) String() string {
+	return net.JoinHostPort(a.Ip.String(), strconv.Itoa(a.Port))
 }
 
 var nodes map[string]Node
@@ -109,4 +116,14 @@ func updateRouterDecision() {
 		// dijkstra needs info of all nodes
 		dijkstraRouteAlgorithm()
 	}
+}
+
+func GetHop(id string) (Address, error) {
+	rdLock.RLock()
+	defer rdLock.RUnlock()
+	addr, ok := routerDecision[id]
+	if !ok {
+		return Address{}, errors.New("no route to host")
+	}
+	return addr, nil
 }
