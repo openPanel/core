@@ -57,4 +57,6 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// DefaultPort holds the default value on creation for the "port" field.
 	DefaultPort int
+	// DefaultID holds the default value on creation for the "id" field.
+	DefaultID func() string
 )

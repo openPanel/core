@@ -1,5 +1,12 @@
 package constant
 
+type Mode string
+
+const (
+	ModeDev  Mode = "dev"
+	ModeProd Mode = "prod"
+)
+
 type Store int
 
 const (
@@ -10,15 +17,12 @@ const (
 type Key string
 
 const (
-	NodeInfoConfigKey    Key = "local.nodeInfo"
-	ClusterInfoConfigKey Key = "shared.clusterInfo"
+	ConfigKeyNodeInfo Key = "local.nodeInfo"
 )
 
 const ProtoMixinIdStart = 536870900
 
-type Mode string
-
 const (
-	ModeDev  Mode = "dev"
-	ModeProd Mode = "prod"
+	ConfigKeyClusterInfo        Key = "shared.clusterInfo"
+	ConfigKeyAuthorizationToken Key = "shared.authorizationToken"
 )

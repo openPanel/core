@@ -11,7 +11,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 	"github.com/openPanel/core/app/generated/db/shared/kv"
 	"github.com/openPanel/core/app/generated/db/shared/node"
 	"github.com/openPanel/core/app/generated/db/shared/predicate"
@@ -599,7 +598,7 @@ type NodeMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *uuid.UUID
+	id            *string
 	created_at    *time.Time
 	updated_at    *time.Time
 	name          *string
@@ -633,7 +632,7 @@ func newNodeMutation(c config, op Op, opts ...nodeOption) *NodeMutation {
 }
 
 // withNodeID sets the ID field of the mutation.
-func withNodeID(id uuid.UUID) nodeOption {
+func withNodeID(id string) nodeOption {
 	return func(m *NodeMutation) {
 		var (
 			err   error
@@ -685,13 +684,13 @@ func (m NodeMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of Node entities.
-func (m *NodeMutation) SetID(id uuid.UUID) {
+func (m *NodeMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *NodeMutation) ID() (id uuid.UUID, exists bool) {
+func (m *NodeMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -702,12 +701,12 @@ func (m *NodeMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *NodeMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *NodeMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):

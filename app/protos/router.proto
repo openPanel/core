@@ -1,6 +1,7 @@
 syntax = "proto3";
 package openPanel;
 
+import "entpb.proto";
 import "google/protobuf/empty.proto";
 
 message LinkState {
@@ -9,7 +10,7 @@ message LinkState {
   int32 latency = 3;
 }
 
-message LinkStateUpdate {
+message LinkStateUpdateRequest {
   repeated LinkState link_state = 1;
 }
 
@@ -22,12 +23,12 @@ message LinkStateResponse {
 }
 
 message NodeUpdateRequest {
-  string nodeId = 1;
+  entpb.Node updatedNode = 1;
 }
 
 service LinkStateService {
   // Update the link state of the node. Part of a broadcast.
-  rpc UpdateLinkState(LinkStateUpdate) returns (google.protobuf.Empty);
+  rpc UpdateLinkState(LinkStateUpdateRequest) returns (google.protobuf.Empty);
   // Indicate that the info of this node should be reload.
   rpc NotifyNodeUpdate(NodeUpdateRequest) returns (google.protobuf.Empty);
 }

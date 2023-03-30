@@ -12,7 +12,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"github.com/openPanel/core/app/generated/db/shared/node"
 )
 
@@ -93,8 +92,16 @@ func (nc *NodeCreate) SetNillableComment(s *string) *NodeCreate {
 }
 
 // SetID sets the "id" field.
-func (nc *NodeCreate) SetID(u uuid.UUID) *NodeCreate {
-	nc.mutation.SetID(u)
+func (nc *NodeCreate) SetID(s string) *NodeCreate {
+	nc.mutation.SetID(s)
+	return nc
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (nc *NodeCreate) SetNillableID(s *string) *NodeCreate {
+	if s != nil {
+		nc.SetID(*s)
+	}
 	return nc
 }
 
@@ -145,6 +152,10 @@ func (nc *NodeCreate) defaults() {
 		v := node.DefaultPort
 		nc.mutation.SetPort(v)
 	}
+	if _, ok := nc.mutation.ID(); !ok {
+		v := node.DefaultID()
+		nc.mutation.SetID(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -179,10 +190,10 @@ func (nc *NodeCreate) sqlSave(ctx context.Context) (*Node, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
-			_node.ID = *id
-		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
-			return nil, err
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected Node.ID type: %T", _spec.ID.Value)
 		}
 	}
 	nc.mutation.id = &_node.ID
@@ -193,12 +204,12 @@ func (nc *NodeCreate) sqlSave(ctx context.Context) (*Node, error) {
 func (nc *NodeCreate) createSpec() (*Node, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Node{config: nc.config}
-		_spec = sqlgraph.NewCreateSpec(node.Table, sqlgraph.NewFieldSpec(node.FieldID, field.TypeUUID))
+		_spec = sqlgraph.NewCreateSpec(node.Table, sqlgraph.NewFieldSpec(node.FieldID, field.TypeString))
 	)
 	_spec.OnConflict = nc.conflict
 	if id, ok := nc.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = &id
+		_spec.ID.Value = id
 	}
 	if value, ok := nc.mutation.CreatedAt(); ok {
 		_spec.SetField(node.FieldCreatedAt, field.TypeTime, value)
@@ -499,7 +510,7 @@ func (u *NodeUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *NodeUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
+func (u *NodeUpsertOne) ID(ctx context.Context) (id string, err error) {
 	if u.create.driver.Dialect() == dialect.MySQL {
 		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
 		// fields from the database since MySQL does not support the RETURNING clause.
@@ -513,7 +524,7 @@ func (u *NodeUpsertOne) ID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *NodeUpsertOne) IDX(ctx context.Context) uuid.UUID {
+func (u *NodeUpsertOne) IDX(ctx context.Context) string {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)

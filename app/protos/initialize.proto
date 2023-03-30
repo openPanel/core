@@ -7,7 +7,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
-message AddNewNodeRequest {
+message RegisterRequest {
   string ip = 1;
   int32 port = 2;
   string serverID = 3;
@@ -15,9 +15,9 @@ message AddNewNodeRequest {
   bytes csr = 5;
 }
 
-message AddNewNodeResponse {
-  string clientPrivateKey = 1;
-  string clusterCACert = 2;
+message RegisterResponse {
+  bytes clientCert = 1;
+  bytes clusterCACert = 2;
   repeated entpb.Node nodes = 3;
 }
 
@@ -27,7 +27,7 @@ message GetNodesInfoResponse {
 }
 
 service InitializeService {
-  rpc AddNewNode(AddNewNodeRequest) returns (AddNewNodeResponse) {
+  rpc Register(RegisterRequest) returns (RegisterResponse) {
     option (google.api.http) = {
       post: "/initialize"
       body: "*"
@@ -39,14 +39,5 @@ service InitializeService {
     };
   }
 
-  rpc GetNodesInfo(google.protobuf.Empty) returns (GetNodesInfoResponse) {
-    option (google.api.http) = {
-      get: "/initialize"
-    };
-    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
-      summary: "Get nodes info"
-      description: "Get all nodes info in the cluster"
-      tags: "Initialize"
-    };
-  }
+  rpc GetNodesInfo(google.protobuf.Empty) returns (GetNodesInfoResponse);
 }

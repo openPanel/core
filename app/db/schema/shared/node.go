@@ -17,7 +17,8 @@ type Node struct {
 
 func (Node) Fields() []ent.Field {
 	return []ent.Field{
-		field.UUID("id", uuid.New()).
+		field.String("id").
+			DefaultFunc(uuid.NewString).
 			Immutable().
 			Annotations(entproto.Field(1)),
 		field.String("name").

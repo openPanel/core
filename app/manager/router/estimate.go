@@ -41,8 +41,7 @@ func estimateLatencies() {
 
 	nodesLock.RUnlock()
 
-	updateRouterInfo(infos)
-	updateRouterDecision()
+	UpdateRouterInfo(infos)
 
 	if EstimateLatenciesCallback != nil {
 		EstimateLatenciesCallback(infos)

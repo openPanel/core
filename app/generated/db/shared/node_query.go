@@ -10,7 +10,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 	"github.com/openPanel/core/app/generated/db/shared/node"
 	"github.com/openPanel/core/app/generated/db/shared/predicate"
 )
@@ -83,8 +82,8 @@ func (nq *NodeQuery) FirstX(ctx context.Context) *Node {
 
 // FirstID returns the first Node ID from the query.
 // Returns a *NotFoundError when no Node ID was found.
-func (nq *NodeQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (nq *NodeQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = nq.Limit(1).IDs(setContextOp(ctx, nq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -96,7 +95,7 @@ func (nq *NodeQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (nq *NodeQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (nq *NodeQuery) FirstIDX(ctx context.Context) string {
 	id, err := nq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -134,8 +133,8 @@ func (nq *NodeQuery) OnlyX(ctx context.Context) *Node {
 // OnlyID is like Only, but returns the only Node ID in the query.
 // Returns a *NotSingularError when more than one Node ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (nq *NodeQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (nq *NodeQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = nq.Limit(2).IDs(setContextOp(ctx, nq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -151,7 +150,7 @@ func (nq *NodeQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (nq *NodeQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (nq *NodeQuery) OnlyIDX(ctx context.Context) string {
 	id, err := nq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -179,7 +178,7 @@ func (nq *NodeQuery) AllX(ctx context.Context) []*Node {
 }
 
 // IDs executes the query and returns a list of Node IDs.
-func (nq *NodeQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+func (nq *NodeQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if nq.ctx.Unique == nil && nq.path != nil {
 		nq.Unique(true)
 	}
@@ -191,7 +190,7 @@ func (nq *NodeQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (nq *NodeQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (nq *NodeQuery) IDsX(ctx context.Context) []string {
 	ids, err := nq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -372,7 +371,7 @@ func (nq *NodeQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (nq *NodeQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(node.Table, node.Columns, sqlgraph.NewFieldSpec(node.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewQuerySpec(node.Table, node.Columns, sqlgraph.NewFieldSpec(node.FieldID, field.TypeString))
 	_spec.From = nq.sql
 	if unique := nq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

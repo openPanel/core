@@ -84,13 +84,16 @@ func filterRouterInfos(id string) {
 	}
 }
 
-func updateRouterInfo(infos map[Edge]int) {
+func UpdateRouterInfo(infos map[Edge]int) {
 	riLock.Lock()
-	defer riLock.Unlock()
 
 	for link, latency := range infos {
 		routerInfos[link] = latency
 	}
+
+	riLock.Unlock()
+
+	updateRouterDecision()
 }
 
 func updateRouterDecision() {

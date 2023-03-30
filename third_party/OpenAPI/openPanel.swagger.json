@@ -31,37 +31,15 @@
   ],
   "paths": {
     "/initialize": {
-      "get": {
-        "summary": "Get nodes info",
-        "description": "Get all nodes info in the cluster",
-        "operationId": "InitializeService_GetNodesInfo",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/openPanelGetNodesInfoResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "tags": [
-          "Initialize"
-        ]
-      },
       "post": {
         "summary": "Join a cluster",
         "description": "A node try to initialize to the cluster",
-        "operationId": "InitializeService_AddNewNode",
+        "operationId": "InitializeService_Register",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/openPanelAddNewNodeResponse"
+              "$ref": "#/definitions/openPanelRegisterResponse"
             }
           },
           "default": {
@@ -77,7 +55,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/openPanelAddNewNodeRequest"
+              "$ref": "#/definitions/openPanelRegisterRequest"
             }
           }
         ],
@@ -101,8 +79,7 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string",
-          "format": "byte"
+          "type": "string"
         },
         "createdAt": {
           "type": "string",
@@ -124,46 +101,6 @@
         },
         "comment": {
           "type": "string"
-        }
-      }
-    },
-    "openPanelAddNewNodeRequest": {
-      "type": "object",
-      "properties": {
-        "ip": {
-          "type": "string"
-        },
-        "port": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "serverID": {
-          "type": "string"
-        },
-        "token": {
-          "type": "string"
-        },
-        "csr": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
-    "openPanelAddNewNodeResponse": {
-      "type": "object",
-      "properties": {
-        "clientPrivateKey": {
-          "type": "string"
-        },
-        "clusterCACert": {
-          "type": "string"
-        },
-        "nodes": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/entpbNode"
-          }
         }
       }
     },
@@ -194,6 +131,48 @@
         "latency": {
           "type": "integer",
           "format": "int32"
+        }
+      }
+    },
+    "openPanelRegisterRequest": {
+      "type": "object",
+      "properties": {
+        "ip": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "serverID": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "csr": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "openPanelRegisterResponse": {
+      "type": "object",
+      "properties": {
+        "clientCert": {
+          "type": "string",
+          "format": "byte"
+        },
+        "clusterCACert": {
+          "type": "string",
+          "format": "byte"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/entpbNode"
+          }
         }
       }
     },

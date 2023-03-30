@@ -29,7 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LinkStateServiceClient interface {
 	// Update the link state of the node. Part of a broadcast.
-	UpdateLinkState(ctx context.Context, in *LinkStateUpdate, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UpdateLinkState(ctx context.Context, in *LinkStateUpdateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Indicate that the info of this node should be reload.
 	NotifyNodeUpdate(ctx context.Context, in *NodeUpdateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -42,7 +42,7 @@ func NewLinkStateServiceClient(cc grpc.ClientConnInterface) LinkStateServiceClie
 	return &linkStateServiceClient{cc}
 }
 
-func (c *linkStateServiceClient) UpdateLinkState(ctx context.Context, in *LinkStateUpdate, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *linkStateServiceClient) UpdateLinkState(ctx context.Context, in *LinkStateUpdateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, LinkStateService_UpdateLinkState_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -65,7 +65,7 @@ func (c *linkStateServiceClient) NotifyNodeUpdate(ctx context.Context, in *NodeU
 // for forward compatibility
 type LinkStateServiceServer interface {
 	// Update the link state of the node. Part of a broadcast.
-	UpdateLinkState(context.Context, *LinkStateUpdate) (*emptypb.Empty, error)
+	UpdateLinkState(context.Context, *LinkStateUpdateRequest) (*emptypb.Empty, error)
 	// Indicate that the info of this node should be reload.
 	NotifyNodeUpdate(context.Context, *NodeUpdateRequest) (*emptypb.Empty, error)
 }
@@ -74,7 +74,7 @@ type LinkStateServiceServer interface {
 type UnimplementedLinkStateServiceServer struct {
 }
 
-func (UnimplementedLinkStateServiceServer) UpdateLinkState(context.Context, *LinkStateUpdate) (*emptypb.Empty, error) {
+func (UnimplementedLinkStateServiceServer) UpdateLinkState(context.Context, *LinkStateUpdateRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateLinkState not implemented")
 }
 func (UnimplementedLinkStateServiceServer) NotifyNodeUpdate(context.Context, *NodeUpdateRequest) (*emptypb.Empty, error) {
@@ -93,7 +93,7 @@ func RegisterLinkStateServiceServer(s grpc.ServiceRegistrar, srv LinkStateServic
 }
 
 func _LinkStateService_UpdateLinkState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LinkStateUpdate)
+	in := new(LinkStateUpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func _LinkStateService_UpdateLinkState_Handler(srv interface{}, ctx context.Cont
 		FullMethod: LinkStateService_UpdateLinkState_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LinkStateServiceServer).UpdateLinkState(ctx, req.(*LinkStateUpdate))
+		return srv.(LinkStateServiceServer).UpdateLinkState(ctx, req.(*LinkStateUpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

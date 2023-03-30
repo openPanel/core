@@ -20,7 +20,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	InitializeService_AddNewNode_FullMethodName   = "/openPanel.InitializeService/AddNewNode"
+	InitializeService_Register_FullMethodName     = "/openPanel.InitializeService/Register"
 	InitializeService_GetNodesInfo_FullMethodName = "/openPanel.InitializeService/GetNodesInfo"
 )
 
@@ -28,7 +28,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InitializeServiceClient interface {
-	AddNewNode(ctx context.Context, in *AddNewNodeRequest, opts ...grpc.CallOption) (*AddNewNodeResponse, error)
+	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	GetNodesInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetNodesInfoResponse, error)
 }
 
@@ -40,9 +40,9 @@ func NewInitializeServiceClient(cc grpc.ClientConnInterface) InitializeServiceCl
 	return &initializeServiceClient{cc}
 }
 
-func (c *initializeServiceClient) AddNewNode(ctx context.Context, in *AddNewNodeRequest, opts ...grpc.CallOption) (*AddNewNodeResponse, error) {
-	out := new(AddNewNodeResponse)
-	err := c.cc.Invoke(ctx, InitializeService_AddNewNode_FullMethodName, in, out, opts...)
+func (c *initializeServiceClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+	out := new(RegisterResponse)
+	err := c.cc.Invoke(ctx, InitializeService_Register_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c *initializeServiceClient) GetNodesInfo(ctx context.Context, in *emptypb.
 // All implementations should embed UnimplementedInitializeServiceServer
 // for forward compatibility
 type InitializeServiceServer interface {
-	AddNewNode(context.Context, *AddNewNodeRequest) (*AddNewNodeResponse, error)
+	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	GetNodesInfo(context.Context, *emptypb.Empty) (*GetNodesInfoResponse, error)
 }
 
@@ -70,8 +70,8 @@ type InitializeServiceServer interface {
 type UnimplementedInitializeServiceServer struct {
 }
 
-func (UnimplementedInitializeServiceServer) AddNewNode(context.Context, *AddNewNodeRequest) (*AddNewNodeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddNewNode not implemented")
+func (UnimplementedInitializeServiceServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
 func (UnimplementedInitializeServiceServer) GetNodesInfo(context.Context, *emptypb.Empty) (*GetNodesInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNodesInfo not implemented")
@@ -88,20 +88,20 @@ func RegisterInitializeServiceServer(s grpc.ServiceRegistrar, srv InitializeServ
 	s.RegisterService(&InitializeService_ServiceDesc, srv)
 }
 
-func _InitializeService_AddNewNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddNewNodeRequest)
+func _InitializeService_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InitializeServiceServer).AddNewNode(ctx, in)
+		return srv.(InitializeServiceServer).Register(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: InitializeService_AddNewNode_FullMethodName,
+		FullMethod: InitializeService_Register_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InitializeServiceServer).AddNewNode(ctx, req.(*AddNewNodeRequest))
+		return srv.(InitializeServiceServer).Register(ctx, req.(*RegisterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -132,8 +132,8 @@ var InitializeService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*InitializeServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddNewNode",
-			Handler:    _InitializeService_AddNewNode_Handler,
+			MethodName: "Register",
+			Handler:    _InitializeService_Register_Handler,
 		},
 		{
 			MethodName: "GetNodesInfo",

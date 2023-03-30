@@ -52,4 +52,8 @@ func init() {
 	nodeDescPort := nodeFields[3].Descriptor()
 	// node.DefaultPort holds the default value on creation for the port field.
 	node.DefaultPort = nodeDescPort.Default.(int)
+	// nodeDescID is the schema descriptor for id field.
+	nodeDescID := nodeFields[0].Descriptor()
+	// node.DefaultID holds the default value on creation for the id field.
+	node.DefaultID = nodeDescID.Default.(func() string)
 }

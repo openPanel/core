@@ -23,7 +23,7 @@ message KV {
 }
 
 message Node {
-  bytes id = 1;
+  string id = 1;
 
   google.protobuf.Timestamp created_at = 536870900;
 

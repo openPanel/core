@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 	"github.com/openPanel/core/app/generated/db/shared/node"
 )
 
@@ -16,7 +15,7 @@ import (
 type Node struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -38,12 +37,10 @@ func (*Node) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case node.FieldPort:
 			values[i] = new(sql.NullInt64)
-		case node.FieldName, node.FieldIP, node.FieldComment:
+		case node.FieldID, node.FieldName, node.FieldIP, node.FieldComment:
 			values[i] = new(sql.NullString)
 		case node.FieldCreatedAt, node.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case node.FieldID:
-			values[i] = new(uuid.UUID)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Node", columns[i])
 		}
@@ -60,10 +57,10 @@ func (n *Node) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case node.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				n.ID = *value
+			} else if value.Valid {
+				n.ID = value.String
 			}
 		case node.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {

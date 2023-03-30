@@ -5,7 +5,9 @@ import (
 
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
+	"github.com/openPanel/core/app/manager/services"
 	"github.com/openPanel/core/app/tools/security"
+	"github.com/openPanel/core/app/tools/utils"
 )
 
 // Start the first node of a cluster
@@ -35,6 +37,13 @@ func Start(listenIp net.IP, listenPort int) {
 		CaCert: caCert,
 		CaKey:  caKey,
 	}
+
+	createDqlite()
+
+	go services.StartRpcServiceBlocking()
+	go services.StartHttpServiceBlocking()
+
+	utils.WaitExit()
 }
 
 // Join a cluster

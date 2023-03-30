@@ -6,12 +6,12 @@ import (
 )
 
 func SaveLocalNodeInfo(i global.LocalNodeInfo) error {
-	return Save(constant.NodeInfoConfigKey, i, constant.LocalStore)
+	return Save(constant.ConfigKeyNodeInfo, i, constant.LocalStore)
 }
 
 func LoadLocalNodeInfo() (global.LocalNodeInfo, error) {
 	i := new(global.LocalNodeInfo)
-	err := Load(constant.NodeInfoConfigKey, i, constant.LocalStore)
+	err := Load(constant.ConfigKeyNodeInfo, i, constant.LocalStore)
 	if err != nil {
 		return global.LocalNodeInfo{}, err
 	}
@@ -19,12 +19,12 @@ func LoadLocalNodeInfo() (global.LocalNodeInfo, error) {
 }
 
 func SaveClusterInfo(i global.ClusterInfo) error {
-	return Save(constant.ClusterInfoConfigKey, i, constant.SharedStore)
+	return Save(constant.ConfigKeyClusterInfo, i, constant.SharedStore)
 }
 
 func LoadClusterInfo() (global.ClusterInfo, error) {
 	i := new(global.ClusterInfo)
-	err := Load(constant.ClusterInfoConfigKey, i, constant.SharedStore)
+	err := Load(constant.ConfigKeyClusterInfo, i, constant.SharedStore)
 	if err != nil {
 		return global.ClusterInfo{}, err
 	}

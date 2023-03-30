@@ -5,10 +5,11 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/providers/zap/v2"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
-	"github.com/openPanel/core/app/clients/rpc"
 	"github.com/openPanel/core/app/global"
+	"github.com/openPanel/core/app/tools/rpc"
 )
 
 var ServerUnaryInterceptorOption = grpc.ChainUnaryInterceptor(
@@ -115,11 +116,17 @@ func serverRedirectStreamInterceptor(
 		}()
 	}
 
-	<-ss.Context().Done()
-
 	defer func(conn *grpc.ClientConn) {
 		_ = stream.CloseSend()
 		_ = conn.Close()
 	}(conn)
-	return nil
+
+	for {
+		select {
+		case <-ss.Context().Done():
+			return ss.Context().Err()
+		case <-stream.Context().Done():
+			return errors.New("upstream conn closed")
+		}
+	}
 }

@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/google/uuid"
 	"github.com/openPanel/core/app/generated/db/shared/migrate"
 
 	"entgo.io/ent"
@@ -362,7 +361,7 @@ func (c *NodeClient) UpdateOne(n *Node) *NodeUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *NodeClient) UpdateOneID(id uuid.UUID) *NodeUpdateOne {
+func (c *NodeClient) UpdateOneID(id string) *NodeUpdateOne {
 	mutation := newNodeMutation(c.config, OpUpdateOne, withNodeID(id))
 	return &NodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -379,7 +378,7 @@ func (c *NodeClient) DeleteOne(n *Node) *NodeDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *NodeClient) DeleteOneID(id uuid.UUID) *NodeDeleteOne {
+func (c *NodeClient) DeleteOneID(id string) *NodeDeleteOne {
 	builder := c.Delete().Where(node.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -396,12 +395,12 @@ func (c *NodeClient) Query() *NodeQuery {
 }
 
 // Get returns a Node entity by its id.
-func (c *NodeClient) Get(ctx context.Context, id uuid.UUID) (*Node, error) {
+func (c *NodeClient) Get(ctx context.Context, id string) (*Node, error) {
 	return c.Query().Where(node.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *NodeClient) GetX(ctx context.Context, id uuid.UUID) *Node {
+func (c *NodeClient) GetX(ctx context.Context, id string) *Node {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
