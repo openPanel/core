@@ -17,7 +17,7 @@ func (s *ServerRpcConn) Close() error {
 	return nil
 }
 
-func NewServerRpcConn(stream grpc.ServerStream, src string, dst string) *ServerRpcConn {
+func NewServerRpcConn(stream grpc.ServerStream, src, dst string) *ServerRpcConn {
 	return &ServerRpcConn{
 		rpcConn{
 			localAddr:  NewRPCConnAddr(src),

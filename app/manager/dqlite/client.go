@@ -17,3 +17,13 @@ func (c *ClientRpcConn) Close() error {
 	defer c.writeLock.Unlock()
 	return c.stream.(grpc.ClientStream).CloseSend()
 }
+
+func NewClientRpcConn(stream grpc.ClientStream, src, dst string) *ClientRpcConn {
+	return &ClientRpcConn{
+		rpcConn{
+			localAddr:  NewRPCConnAddr(src),
+			remoteAddr: NewRPCConnAddr(dst),
+			stream:     stream,
+		},
+	}
+}

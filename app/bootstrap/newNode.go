@@ -11,20 +11,25 @@ import (
 )
 
 type newNodeMeta struct {
-	ServerId   string
-	ServerIp   net.IP
-	ServerPort int
-	Csr        []byte
-	PrivateKey []byte
+	serverId   string
+	serverIp   net.IP
+	serverPort int
+	csr        []byte
+	privateKey []byte
+
+	isIndirectIP bool
 }
 
 func generateNewNodeMeta(ip net.IP, port int) newNodeMeta {
 	serverId := uuid.New().String()
 
 	var serverIp net.IP
+	var indirect bool
+	var err error
 
 	if ip.IsUnspecified() {
-		serverIps, err := netUtils.GetPublicIP()
+		var serverIps []net.IP
+		serverIps, indirect, err = netUtils.GetPublicIP()
 		if err != nil {
 			log.Fatalf("Failed to get public IP: %v", err)
 		}
@@ -46,10 +51,11 @@ func generateNewNodeMeta(ip net.IP, port int) newNodeMeta {
 	}
 
 	return newNodeMeta{
-		ServerId:   serverId,
-		ServerIp:   serverIp,
-		ServerPort: serverPort,
-		Csr:        signingCsr,
-		PrivateKey: privateKey,
+		serverId:     serverId,
+		serverIp:     serverIp,
+		serverPort:   serverPort,
+		csr:          signingCsr,
+		isIndirectIP: indirect,
+		privateKey:   privateKey,
 	}
 }

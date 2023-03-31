@@ -3,10 +3,34 @@ package dqlite
 import (
 	"context"
 	"net"
+
+	"github.com/openPanel/core/app/generated/pb"
+	"github.com/openPanel/core/app/global"
+	"github.com/openPanel/core/app/global/log"
+	"github.com/openPanel/core/app/tools/rpc"
 )
 
 func DialFunction(ctx context.Context, address string) (net.Conn, error) {
-	panic("implement me") // TODO
+	if address == global.App.NodeInfo.ServerId {
+		server, client := net.Pipe()
+		log.Debugf("Accepting connection from %s", address)
+		AcceptChan <- client
+		log.Debugf("Accepted connection from %s", address)
+		return server, nil
+	}
+
+	conn, err := rpc.DialWithServerId(address)
+	if err != nil {
+		return nil, err
+	}
+
+	client := pb.NewDqliteConnectionClient(conn)
+
+	stream, err := client.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return NewClientRpcConn(stream, global.App.NodeInfo.ServerId, address), nil
 }
 
-var AcceptChan chan net.Conn
+var AcceptChan = make(chan net.Conn)

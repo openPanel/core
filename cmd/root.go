@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"log"
+	"net"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -25,8 +26,13 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-var listenIp = rootCmd.PersistentFlags().IPP("ip", "i", constant.DefaultListenIp, "IP address to listen on")
-var listenPort = rootCmd.PersistentFlags().IntP("port", "p", constant.DefaultListenPort, "Port to listen on")
+var listenIp *net.IP
+var listenPort *int
+
+func init() {
+	listenIp = rootCmd.PersistentFlags().IPP("ip", "i", constant.DefaultListenIp, "IP address to listen on")
+	listenPort = rootCmd.PersistentFlags().IntP("port", "p", constant.DefaultListenPort, "Port to listen on")
+}
 
 func Execute() {
 	err := rootCmd.Execute()

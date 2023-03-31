@@ -4,8 +4,6 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/openPanel/core/app/config"
@@ -19,18 +17,6 @@ import (
 var InitializeService pb.InitializeServiceServer = new(initializeService)
 
 type initializeService struct{}
-
-func init() {
-	pb.RegisterInitializeServiceServer(grpcServer, InitializeService)
-	err := pb.RegisterInitializeServiceHandlerFromEndpoint(
-		context.Background(),
-		grpcMux,
-		constant.RpcUnixListenAddress,
-		[]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())})
-	if err != nil {
-		return
-	}
-}
 
 func (i initializeService) Register(ctx context.Context, request *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	var authedToken string

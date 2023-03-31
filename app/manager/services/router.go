@@ -14,10 +14,6 @@ var LinkStateService pb.LinkStateServiceServer = new(linkStateService)
 
 type linkStateService struct{}
 
-func init() {
-	pb.RegisterLinkStateServiceServer(grpcServer, LinkStateService)
-}
-
 func (l linkStateService) UpdateLinkState(ctx context.Context, request *pb.LinkStateUpdateRequest) (*emptypb.Empty, error) {
 	infos := map[router.Edge]int{}
 	for _, state := range request.LinkState {

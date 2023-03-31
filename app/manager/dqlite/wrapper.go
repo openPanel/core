@@ -11,6 +11,7 @@ import (
 
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/generated/db/shared"
+	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/tools/utils/fileUtils"
 )
@@ -20,6 +21,7 @@ var sharedClient *shared.Client
 
 func createSharedDatabase(clusterAddrs *[]string) (*shared.Client, error) {
 	options := []dqliteApp.Option{
+		dqliteApp.WithAddress(global.App.NodeInfo.ServerId),
 		dqliteApp.WithLogFunc(getDqliteLogger()),
 		dqliteApp.WithExternalConn(DialFunction, AcceptChan),
 	}
@@ -33,6 +35,11 @@ func createSharedDatabase(clusterAddrs *[]string) (*shared.Client, error) {
 	}
 
 	app, err := dqliteApp.New(dqliteDir, options...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = app.Ready(context.Background())
 	if err != nil {
 		return nil, err
 	}

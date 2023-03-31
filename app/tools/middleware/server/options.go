@@ -12,15 +12,19 @@ import (
 	"github.com/openPanel/core/app/tools/rpc"
 )
 
-var ServerUnaryInterceptorOption = grpc.ChainUnaryInterceptor(
-	serverRedirectUnaryInterceptor,
-	logging.UnaryServerInterceptor(zap.InterceptorLogger(global.App.Logger.Named("grpc-server"))),
-)
+func GetServerUnaryInterceptorOption() grpc.ServerOption {
+	return grpc.ChainUnaryInterceptor(
+		serverRedirectUnaryInterceptor,
+		logging.UnaryServerInterceptor(zap.InterceptorLogger(global.App.Logger.Named("grpc-server"))),
+	)
+}
 
-var ServerStreamInterceptorOption = grpc.ChainStreamInterceptor(
-	serverRedirectStreamInterceptor,
-	logging.StreamServerInterceptor(zap.InterceptorLogger(global.App.Logger.Named("grpc-server-stream"))),
-)
+func GetServerStreamInterceptorOption() grpc.ServerOption {
+	return grpc.ChainStreamInterceptor(
+		serverRedirectStreamInterceptor,
+		logging.StreamServerInterceptor(zap.InterceptorLogger(global.App.Logger.Named("grpc-server-stream"))),
+	)
+}
 
 func serverRedirectUnaryInterceptor(
 	ctx context.Context,

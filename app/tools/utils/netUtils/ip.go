@@ -12,28 +12,28 @@ import (
 	"github.com/openPanel/core/app/global/log"
 )
 
-func GetPublicIP() (ips []net.IP, err error) {
+func GetPublicIP() (ips []net.IP, indirect bool, err error) {
 	localIPs, err := getPublicIPsFromLocal()
 	if err != nil {
 		log.Error("Failed to get public IP from local network interfaces", zap.Error(err))
-		return nil, err
+		return nil, false, err
 	}
 	if len(localIPs) > 0 {
-		return localIPs, nil
+		return localIPs, false, nil
 	}
 
 	log.Debug("No public IP found from local network interfaces")
 	cfip, err := getPublicIPWithCloudflare()
 	if err == nil {
-		return []net.IP{cfip}, nil
+		return []net.IP{cfip}, true, nil
 	}
 	log.Error("Failed to get public IP from Cloudflare", zap.Error(err))
 	ipifyip, err := getPublicIPWithIpify()
 	if err == nil {
-		return []net.IP{ipifyip}, nil
+		return []net.IP{ipifyip}, true, nil
 	}
 	log.Fatal("Failed to get public IP from ipify", zap.Error(err))
-	return nil, errors.New("failed to get public IP")
+	return nil, false, errors.New("failed to get public IP")
 }
 
 func getPublicIPsFromLocal() (ips []net.IP, err error) {
@@ -88,7 +88,7 @@ func getPublicIPWithCloudflare() (net.IP, error) {
 			if ip == nil {
 				return nil, errors.New("could not parse ip")
 			}
-			log.Warnf("found ip: %s from cloudflare trace, may not be correct", ip.String())
+			log.Infof("found ip: %s from cloudflare trace, may not be correct", ip.String())
 			return ip, nil
 		}
 	}
@@ -116,6 +116,6 @@ func getPublicIPWithIpify() (net.IP, error) {
 	if ip == nil {
 		return nil, errors.New("could not parse ip")
 	}
-	log.Warnf("found ip: %s from ipify, may not be correct", ip.String())
+	log.Infof("found ip: %s from ipify, may not be correct", ip.String())
 	return ip, nil
 }

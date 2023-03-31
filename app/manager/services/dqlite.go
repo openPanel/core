@@ -9,10 +9,6 @@ var DqliteService pb.DqliteConnectionServer = new(dqliteService)
 
 type dqliteService struct{}
 
-func init() {
-	pb.RegisterDqliteConnectionServer(grpcServer, DqliteService)
-}
-
 func (d *dqliteService) Connect(server pb.DqliteConnection_ConnectServer) error {
 	src, dst, err := getSrcAndDstFromContext(server.Context())
 	if err != nil {

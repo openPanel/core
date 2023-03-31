@@ -5,15 +5,15 @@ import (
 	"github.com/openPanel/core/app/global"
 )
 
-func SaveLocalNodeInfo(i global.LocalNodeInfo) error {
+func SaveLocalNodeInfo(i global.NodeInfo) error {
 	return Save(constant.ConfigKeyNodeInfo, i, constant.LocalStore)
 }
 
-func LoadLocalNodeInfo() (global.LocalNodeInfo, error) {
-	i := new(global.LocalNodeInfo)
+func LoadLocalNodeInfo() (global.NodeInfo, error) {
+	i := new(global.NodeInfo)
 	err := Load(constant.ConfigKeyNodeInfo, i, constant.LocalStore)
 	if err != nil {
-		return global.LocalNodeInfo{}, err
+		return global.NodeInfo{}, err
 	}
 	return *i, nil
 }

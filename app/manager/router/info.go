@@ -26,7 +26,7 @@ func (a Address) String() string {
 	return net.JoinHostPort(a.Ip.String(), strconv.Itoa(a.Port))
 }
 
-var nodes map[string]Node
+var nodes = map[string]Node{}
 var nodesLock = sync.RWMutex{}
 
 // RouterDecision The map store the decision of the router, value define the next hop

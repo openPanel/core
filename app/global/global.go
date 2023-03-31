@@ -13,7 +13,7 @@ type application struct {
 	DbLocal  *local.Client
 	DbShared *shared.Client
 
-	NodeInfo    LocalNodeInfo
+	NodeInfo    NodeInfo
 	ClusterInfo ClusterInfo
 
 	Mode constant.Mode

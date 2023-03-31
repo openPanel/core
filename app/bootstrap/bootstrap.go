@@ -12,6 +12,8 @@ import (
 
 // Start the first node of a cluster
 func Start(listenIp net.IP, listenPort int) {
+	requireInitialStartUp()
+
 	commonInit()
 	meta := generateNewNodeMeta(listenIp, listenPort)
 
@@ -19,13 +21,15 @@ func Start(listenIp net.IP, listenPort int) {
 	if err != nil {
 		log.Fatalf("Failed to generate CA certificate: %v", err)
 	}
+	log.Info("CA certificate generated")
 
-	localServerCert, err := security.SignCsr(caCert, caKey, meta.Csr)
+	localServerCert, err := security.SignCsr(caCert, caKey, meta.csr)
 	if err != nil {
 		log.Fatalf("Failed to sign local certificate: %v", err)
 	}
+	log.Info("Local certificate signed")
 
-	node, err := saveNodeInfo(meta.ServerId, meta.ServerIp, meta.ServerPort, localServerCert, meta.PrivateKey)
+	node, err := saveNodeInfo(meta.serverId, meta.serverIp, meta.serverPort, localServerCert, meta.privateKey, meta.isIndirectIP)
 	if err != nil {
 		log.Fatalf("Failed to save node info: %v", err)
 	}
@@ -39,15 +43,21 @@ func Start(listenIp net.IP, listenPort int) {
 	}
 
 	createDqlite()
+	log.Info("Dqlite database configured")
 
 	go services.StartRpcServiceBlocking()
+	log.Infof("RPC service started on %s:%d", listenIp.String(), listenPort)
+
 	go services.StartHttpServiceBlocking()
+	log.Infof("HTTP service started on %s:%d", listenIp.String(), listenPort)
 
 	utils.WaitExit()
 }
 
 // Join a cluster
 func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
+	requireInitialStartUp()
+
 	commonInit()
 	generateNewNodeMeta(listenIp, listenPort)
 }
