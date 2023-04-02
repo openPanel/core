@@ -41,4 +41,5 @@ out
 go.work
 vendor/
 
-t/
+bin/
+data/

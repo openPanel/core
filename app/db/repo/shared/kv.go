@@ -48,12 +48,10 @@ func (r *kvRepo) Set(ctx context.Context, key string, value string) error {
 }
 
 func (r *kvRepo) SetExpire(ctx context.Context, key string, value string, expiresAt time.Time) error {
-	return db.GetSharedDb().KV.
+	_, err := db.GetSharedDb().KV.
 		Create().
 		SetKey(key).
 		SetValue(value).
-		SetExpiresAt(expiresAt).
-		OnConflictColumns(kv.FieldKey).
-		UpdateValue().
-		Exec(ctx)
+		SetExpiresAt(expiresAt).Save(ctx)
+	return err
 }

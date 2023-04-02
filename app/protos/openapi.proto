@@ -15,11 +15,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     };
     contact: {
       name: "openPanel";
-      url: "https://github.com/openPanel/core/issues";
+      url: "https://github.com/openPanel/core";
     };
-  };
-  external_docs: {
-    url: "https://github.com/openPanel/core";
-    description: "openPanel repository";
   };
 };

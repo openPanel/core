@@ -13,13 +13,13 @@ func getDqliteLogger() client.LogFunc {
 		case client.LogNone:
 			return
 		case client.LogDebug:
-			namedLogger.Debugf(format, a)
+			namedLogger.Debugf(format, a...)
 		case client.LogInfo:
-			namedLogger.Infof(format, a)
+			namedLogger.Infof(format, a...)
 		case client.LogWarn:
-			namedLogger.Warnf(format, a)
+			namedLogger.Warnf(format, a...)
 		case client.LogError:
-			namedLogger.Errorf(format, a)
+			namedLogger.Errorf(format, a...)
 		}
 	}
 }

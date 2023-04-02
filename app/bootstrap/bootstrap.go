@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"net"
 
+	"github.com/openPanel/core/app/config"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/services"
@@ -42,7 +43,7 @@ func Start(listenIp net.IP, listenPort int) {
 		CaKey:  caKey,
 	}
 
-	createDqlite()
+	global.App.DbShared = createDqlite()
 	log.Info("Dqlite database configured")
 
 	go services.StartRpcServiceBlocking()
@@ -50,6 +51,10 @@ func Start(listenIp net.IP, listenPort int) {
 
 	go services.StartHttpServiceBlocking()
 	log.Infof("HTTP service started on %s:%d", listenIp.String(), listenPort)
+
+	e1 := config.SaveClusterInfo(global.App.ClusterInfo)
+
+	_ = e1 // TODO: handle error
 
 	utils.WaitExit()
 }
@@ -59,7 +64,11 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 	requireInitialStartUp()
 
 	commonInit()
-	generateNewNodeMeta(listenIp, listenPort)
+
+	meta := generateNewNodeMeta(listenIp, listenPort)
+
+	_ = meta
+
 }
 
 // Resume resume a node to cluster
@@ -69,5 +78,9 @@ func Resume() {
 
 func commonInit() {
 	initLogger()
+
+	requireRoot()
+	increaseUDPBufferSize()
+
 	initLocalDatabase()
 }

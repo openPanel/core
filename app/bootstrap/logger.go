@@ -41,6 +41,8 @@ func initLogger() {
 		logger = logger.WithOptions(zap.Development())
 	}
 
+	logger = logger.Named("core")
+
 	logger.Info("Logger initialized at " + logFile.Name())
 
 	customLog.UpdateLogger(logger.Sugar())

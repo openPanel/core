@@ -1,0 +1,33 @@
+version: "3"
+
+env:
+  CGO_LDFLAGS_ALLOW: "-Wl,-z,now"
+
+tasks:
+  build-release:
+    cmds:
+      - "go build
+        -tags 'release osusergo netgo static_build sqlite_omit_load_extension sqlite_foreign_keys'
+        -trimpath -ldflags '-linkmode \"external\" -s -w -extldflags \"-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a\"'
+        -o ./bin/openPanel github.com/openPanel/core"
+
+  build-static-debug:
+    cmds:
+      - "go build
+        -tags 'osusergo netgo static_build sqlite_omit_load_extension sqlite_foreign_keys'
+        -ldflags '-linkmode \"external\" -extldflags \"-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a\"'
+        -o ./bin/openPanel.debug github.com/openPanel/core"
+
+  build-static-analysis:
+    cmds:
+      - "go build
+        -tags 'osusergo netgo static_build sqlite_omit_load_extension sqlite_foreign_keys'
+        -ldflags '-linkmode \"external\" -extldflags \"-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a\"'
+        -gcflags \"all=-N -l\"
+        -o ./bin/openPanel.analysis github.com/openPanel/core"
+
+  install_deps:
+    - "if [ -z $CI ]; then echo 'Not running in CI, exiting'; exit 1; fi"
+    - "sudo add-apt-repository ppa:dqlite/dev"
+    - "sudo apt-get update"
+    - "sudo apt install -y liblz4-dev liblz4-tool libuv1-dev libsqlite3-dev"

@@ -6,26 +6,34 @@ require (
 	entgo.io/contrib v0.3.5
 	entgo.io/ent v0.11.10
 	github.com/canonical/go-dqlite v1.11.7
+	github.com/flowchartsman/swaggerui v0.0.0-20221017034628-909ed4f3701b
 	github.com/go-co-op/gocron v1.19.0
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/zap/v2 v2.0.0-rc.3
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.3
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.2
+	github.com/julienschmidt/httprouter v1.3.0
+	github.com/lorenzosaino/go-sysctl v0.3.1
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/pkg/errors v0.9.1
 	github.com/quic-go/quic-go v0.33.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.2
 	go.uber.org/zap v1.24.0
-	google.golang.org/genproto v0.0.0-20230330200707-38013875ee22
+	google.golang.org/genproto v0.0.0-20230331144136-dcfb400f0633
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
 )
 
-replace github.com/canonical/go-dqlite v1.11.7 => github.com/openPanel/go-dqlite v0.0.0-20230331113006-e579e9de3c20
+replace (
+	entgo.io/ent v0.11.10 => github.com/openPanel/ent v0.0.0-20230402135651-305c3704e8e2
+	github.com/canonical/go-dqlite v1.11.7 => github.com/openPanel/go-dqlite v0.0.0-20230331113006-e579e9de3c20
+	github.com/flowchartsman/swaggerui v0.0.0-20221017034628-909ed4f3701b => github.com/openPanel/swaggerui v0.0.0-20230401141121-264dd475eced
+)
 
 require (
 	ariga.io/atlas v0.10.0 // indirect
+	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/Rican7/retry v0.3.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
@@ -55,6 +63,8 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
+	golang.org/x/exp/typeparams v0.0.0-20230321023759-10a507213a29 // indirect
+	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
@@ -63,4 +73,5 @@ require (
 	golang.org/x/tools v0.7.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	honnef.co/go/tools v0.4.3 // indirect
 )

@@ -1,23 +1,22 @@
 package bootstrap
 
 import (
-	"log"
+	slog "log"
 	"net"
 	"os"
 	"os/user"
+	"strconv"
+
+	"github.com/lorenzosaino/go-sysctl"
 
 	"github.com/openPanel/core/app/config"
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/global"
 
-	userLog "github.com/openPanel/core/app/global/log"
+	"github.com/openPanel/core/app/global/log"
 )
 
-func init() {
-	RequireRoot()
-}
-
-func RequireRoot() {
+func requireRoot() {
 	u, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
@@ -43,7 +42,7 @@ func saveNodeInfo(id string, ip net.IP, port int, cert, key []byte, indirect boo
 func loadNodeInfo() (id string, ip net.IP, port int, cert, key []byte) {
 	i, err := config.LoadLocalNodeInfo()
 	if err != nil {
-		userLog.Fatalf("Failed to load node info: %v", err)
+		log.Fatalf("Failed to load node info: %v", err)
 	}
 	return i.ServerId, i.ServerIp, i.ServerPort, i.ServerCert, i.ServerPrivateKey
 }
@@ -51,8 +50,25 @@ func loadNodeInfo() (id string, ip net.IP, port int, cert, key []byte) {
 func requireInitialStartUp() {
 	// check file exist
 	if _, err := os.Stat(constant.DefaultDataDir + string(os.PathSeparator) + constant.DefaultLocalSqliteFilename); err == nil {
-		log.Fatal("This program has already been initialized, boot with no command to resume the server")
+		slog.Fatal("This instance has already been initialized, boot with no command to resume the server")
 	} else if !os.IsNotExist(err) {
-		log.Fatalf("Failed to check if database file exists: %v", err)
+		slog.Fatalf("Failed to check if database file exists: %v", err)
+	}
+}
+
+func increaseUDPBufferSize() {
+	v, err := sysctl.Get(constant.SysctlUdpBufferSizeKey)
+	if err != nil {
+		log.Fatalf("Failed to read udp buffer: %v", err)
+	}
+	vNum, err := strconv.Atoi(v)
+	if vNum < constant.SysctlUdpBufferSizeValue {
+		err := sysctl.Set(constant.SysctlUdpBufferSizeKey, strconv.Itoa(constant.SysctlUdpBufferSizeValue))
+		if err != nil {
+			log.Fatalf("Failed to increase udp buffer: %v", err)
+		}
+		log.Infof("Increased UDP buffer size to %d", constant.SysctlUdpBufferSizeValue)
+	} else {
+		log.Infof("UDP buffer size is %d, not need to increase", vNum)
 	}
 }

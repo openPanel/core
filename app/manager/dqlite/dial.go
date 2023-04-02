@@ -6,16 +6,13 @@ import (
 
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global"
-	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/tools/rpc"
 )
 
 func DialFunction(ctx context.Context, address string) (net.Conn, error) {
 	if address == global.App.NodeInfo.ServerId {
 		server, client := net.Pipe()
-		log.Debugf("Accepting connection from %s", address)
 		AcceptChan <- client
-		log.Debugf("Accepted connection from %s", address)
 		return server, nil
 	}
 

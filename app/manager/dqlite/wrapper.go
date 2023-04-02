@@ -49,7 +49,19 @@ func createSharedDatabase(clusterAddrs *[]string) (*shared.Client, error) {
 		return nil, err
 	}
 
-	return shared.NewClient(shared.Driver(sql.OpenDB(dialect.SQLite, db))), nil
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	client := shared.NewClient(shared.Driver(sql.OpenDB(dialect.SQLite, db)))
+
+	err = client.Schema.Create(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
 }
 
 func CreateSharedDatabase(serverAddr *[]string) *shared.Client {
