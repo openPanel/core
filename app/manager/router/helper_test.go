@@ -1,7 +1,7 @@
 package router
 
 import (
-	"net"
+	"net/netip"
 	"sync"
 
 	"github.com/openPanel/core/app/global"
@@ -13,39 +13,24 @@ var testLock sync.Mutex
 func setupTestData() {
 	nodes = map[string]Node{
 		"A": {
-			Id: "A",
-			Address: Address{
-				Ip:   net.IPv4(127, 0, 0, 1),
-				Port: 8080,
-			},
+			Id:       "A",
+			AddrPort: netip.MustParseAddrPort("127.0.0.1:8080"),
 		},
 		"B": {
-			Id: "B",
-			Address: Address{
-				Ip:   net.IPv4(127, 0, 0, 2),
-				Port: 8081,
-			},
+			Id:       "B",
+			AddrPort: netip.MustParseAddrPort("127.0.0.2:8081"),
 		},
 		"C": {
-			Id: "C",
-			Address: Address{
-				Ip:   net.IPv4(127, 0, 0, 3),
-				Port: 8082,
-			},
+			Id:       "C",
+			AddrPort: netip.MustParseAddrPort("127.0.0.3:8082"),
 		},
 		"D": {
-			Id: "D",
-			Address: Address{
-				Ip:   net.IPv4(127, 0, 0, 4),
-				Port: 8083,
-			},
+			Id:       "D",
+			AddrPort: netip.MustParseAddrPort("127.0.0.4:8083"),
 		},
 		"E": {
-			Id: "E",
-			Address: Address{
-				Ip:   net.IPv4(127, 0, 0, 5),
-				Port: 8084,
-			},
+			Id:       "E",
+			AddrPort: netip.MustParseAddrPort("127.0.0.5:8084"),
 		},
 	}
 

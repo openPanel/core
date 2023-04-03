@@ -2,6 +2,7 @@ syntax = "proto3";
 package openPanel;
 
 import "entpb.proto";
+import "router.proto";
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
@@ -19,11 +20,12 @@ message RegisterResponse {
   bytes clientCert = 1;
   bytes clusterCACert = 2;
   repeated entpb.Node nodes = 3;
+  repeated LinkState linkStates = 4;
 }
 
 message GetNodesInfoResponse {
   repeated entpb.Node nodes = 1;
-  string token = 2;
+  repeated LinkState linkStates = 2;
 }
 
 service InitializeService {

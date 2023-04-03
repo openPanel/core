@@ -15,7 +15,7 @@ func DialWithAddress(address, target string) (*grpc.ClientConn, error) {
 	tlsConfig, err := security.GenerateRPCTLSConfig(
 		global.App.NodeInfo.ServerCert,
 		global.App.NodeInfo.ServerPrivateKey,
-		global.App.ClusterInfo.CaCert,
+		global.App.NodeInfo.ClusterCaCert,
 	)
 	if err != nil {
 		log.Errorf("error generating tls config: %v", err)

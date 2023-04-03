@@ -57,6 +57,6 @@ func dijkstraRouteAlgorithm() {
 		if len(path) < 2 {
 			log.Warnf("No path to node %s", node.Id)
 		}
-		routerDecision[node.Id] = nodes[path[1]].Address
+		routerDecision[node.Id] = nodes[path[1]].AddrPort
 	}
 }

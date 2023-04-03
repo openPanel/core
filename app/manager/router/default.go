@@ -2,6 +2,7 @@ package router
 
 import (
 	"math"
+	"net/netip"
 
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
@@ -18,7 +19,7 @@ func defaultRouteAlgorithm() {
 	}
 
 	// reset router decision
-	routerDecision = map[string]Address{}
+	routerDecision = map[string]netip.AddrPort{}
 
 	// find the lowest latency node
 	var lowestLatencyNode string
@@ -45,9 +46,9 @@ func defaultRouteAlgorithm() {
 			continue
 		}
 		if _, ok := reachableNodes[id]; ok {
-			routerDecision[id] = node.Address
+			routerDecision[id] = node.AddrPort
 		} else {
-			routerDecision[id] = nodes[lowestLatencyNode].Address
+			routerDecision[id] = nodes[lowestLatencyNode].AddrPort
 		}
 	}
 }

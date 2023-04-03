@@ -2,7 +2,7 @@ package router
 
 import (
 	"net"
-	"strconv"
+	"net/netip"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -17,25 +17,16 @@ type Edge struct {
 var routerInfos = map[Edge]int{}
 var riLock = sync.RWMutex{}
 
-type Address struct {
-	Ip   net.IP
-	Port int
-}
-
-func (a Address) String() string {
-	return net.JoinHostPort(a.Ip.String(), strconv.Itoa(a.Port))
-}
-
 var nodes = map[string]Node{}
 var nodesLock = sync.RWMutex{}
 
 // RouterDecision The map store the decision of the router, value define the next hop
-var routerDecision = make(map[string]Address)
+var routerDecision = make(map[string]netip.AddrPort)
 var rdLock = sync.RWMutex{}
 
 type Node struct {
 	Id string
-	Address
+	netip.AddrPort
 }
 
 func AddNodes(ns []Node) {
@@ -58,11 +49,8 @@ func UpdateNode(id string, ip net.IP, port int) {
 	nodesLock.Lock()
 	defer nodesLock.Unlock()
 	nodes[id] = Node{
-		Id: id,
-		Address: Address{
-			Ip:   ip,
-			Port: port,
-		},
+		Id:       id,
+		AddrPort: netip.AddrPortFrom(netip.MustParseAddr(ip.String()), uint16(port)),
 	}
 
 	filterRouterInfos(id)
@@ -73,12 +61,22 @@ func filterRouterInfos(id string) {
 	riLock.Lock()
 	defer riLock.Unlock()
 
+	// we assume nodes has already been locked
+	nodeMap := make(map[string]bool)
+	for _, node := range nodes {
+		nodeMap[node.Id] = true
+	}
+
 	if len(routerInfos) == 0 {
 		return
 	}
 
 	for link := range routerInfos {
 		if link.From == id || link.To == id {
+			delete(routerInfos, link)
+		}
+		// remove no exist router info
+		if !nodeMap[link.From] || !nodeMap[link.To] {
 			delete(routerInfos, link)
 		}
 	}
@@ -94,6 +92,12 @@ func UpdateRouterInfo(infos map[Edge]int) {
 	riLock.Unlock()
 
 	updateRouterDecision()
+}
+
+func GetRouterInfo() map[Edge]int {
+	riLock.RLock()
+	defer riLock.RUnlock()
+	return routerInfos
 }
 
 func updateRouterDecision() {
@@ -121,12 +125,12 @@ func updateRouterDecision() {
 	}
 }
 
-func GetHop(id string) (Address, error) {
+func GetHop(id string) (netip.AddrPort, error) {
 	rdLock.RLock()
 	defer rdLock.RUnlock()
 	addr, ok := routerDecision[id]
 	if !ok {
-		return Address{}, errors.New("no route to host")
+		return netip.AddrPort{}, errors.New("no route to host")
 	}
 	return addr, nil
 }

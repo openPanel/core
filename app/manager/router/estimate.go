@@ -1,16 +1,13 @@
 package router
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/openPanel/core/app/clients/http"
 	"github.com/openPanel/core/app/global"
 )
 
-var EstimateLatenciesCallback func(map[Edge]int) = nil
-
-func estimateLatencies() {
+func EstimateLatencies() map[Edge]int {
 	nodesLock.RLock()
 
 	wg := sync.WaitGroup{}
@@ -25,7 +22,7 @@ func estimateLatencies() {
 		go func(node Node) {
 			defer wg.Done()
 
-			latency, err := http.QuicPing(fmt.Sprintf("https://%s:%d", node.Address.Ip, node.Address.Port))
+			latency, err := http.QuicPing(node.AddrPort)
 			if err != nil {
 				return
 			}
@@ -43,7 +40,5 @@ func estimateLatencies() {
 
 	UpdateRouterInfo(infos)
 
-	if EstimateLatenciesCallback != nil {
-		EstimateLatenciesCallback(infos)
-	}
+	return infos
 }

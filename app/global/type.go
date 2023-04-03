@@ -11,10 +11,11 @@ type NodeInfo struct {
 	ServerCert       []byte
 	ServerPrivateKey []byte
 
+	ClusterCaCert []byte
+
 	IsIndirectIP bool
 }
 
 type ClusterInfo struct {
-	CaCert []byte
-	CaKey  []byte
+	CaKey []byte
 }

@@ -20,17 +20,6 @@ import (
 )
 
 func getGrpcMux() *runtime.ServeMux {
-	grpcMux := runtime.NewServeMux()
-
-	err := pb.RegisterInitializeServiceHandlerFromEndpoint(
-		context.Background(),
-		grpcMux,
-		constant.RpcUnixListenAddress,
-		[]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())})
-	if err != nil {
-		log.Fatalf("error registering grpc gateway: %v", err)
-	}
-
 	unixListener, err := net.Listen("unix", "")
 	if err != nil {
 		log.Fatalf("error listening: %v", err)
@@ -40,7 +29,25 @@ func getGrpcMux() *runtime.ServeMux {
 		if err := grpcServer.Serve(unixListener); err != nil {
 			log.Fatalf("error serving loopback grpc: %v", err)
 		}
+
+		// TODO: add graceful stop
 	}()
+
+	grpcMux := runtime.NewServeMux()
+
+	err = pb.RegisterInitializeServiceHandlerFromEndpoint(
+		context.Background(),
+		grpcMux,
+		unixListener.Addr().String(),
+		[]grpc.DialOption{
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
+				return (&net.Dialer{}).DialContext(ctx, "unix", s)
+			}),
+		})
+	if err != nil {
+		log.Fatalf("error registering grpc gateway: %v", err)
+	}
 
 	return grpcMux
 }

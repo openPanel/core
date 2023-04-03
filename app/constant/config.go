@@ -17,7 +17,8 @@ const (
 type Key string
 
 const (
-	ConfigKeyNodeInfo Key = "local.nodeInfo"
+	ConfigKeyNodeInfo   Key = "local.nodeInfo"
+	ConfigKeyNodesCache Key = "local.nodesCache"
 )
 
 const ProtoMixinIdStart = 536870900

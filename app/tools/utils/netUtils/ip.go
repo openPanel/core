@@ -23,11 +23,14 @@ func GetPublicIP() (ips []net.IP, indirect bool, err error) {
 	}
 
 	log.Debug("No public IP found from local network interfaces")
-	cfip, err := getPublicIPWithCloudflare()
-	if err == nil {
-		return []net.IP{cfip}, true, nil
-	}
-	log.Error("Failed to get public IP from Cloudflare", zap.Error(err))
+
+	// FIXME: cloudflare may get ipv6 address, which is not supported by openPanel now
+	// cfip, err := getPublicIPWithCloudflare()
+	// if err == nil {
+	// 	return []net.IP{cfip}, true, nil
+	// }
+	// log.Error("Failed to get public IP from Cloudflare", zap.Error(err))
+
 	ipifyip, err := getPublicIPWithIpify()
 	if err == nil {
 		return []net.IP{ipifyip}, true, nil

@@ -27,7 +27,13 @@ tasks:
         -o ./bin/openPanel.analysis github.com/openPanel/core"
 
   install_deps:
-    - "if [ -z $CI ]; then echo 'Not running in CI, exiting'; exit 1; fi"
-    - "sudo add-apt-repository ppa:dqlite/dev"
-    - "sudo apt-get update"
-    - "sudo apt install -y liblz4-dev liblz4-tool libuv1-dev libsqlite3-dev"
+    cmds:
+      - "if [ -z $CI ]; then echo 'Not running in CI, exiting'; exit 1; fi"
+      - "sudo add-apt-repository ppa:dqlite/dev"
+      - "sudo apt-get update"
+      - "sudo apt install -y liblz4-dev liblz4-tool libuv1-dev libsqlite3-dev"
+
+  bingo:
+    cmds:
+      - "go install github.com/bwplotka/bingo@latest"
+      - "bingo get"

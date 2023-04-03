@@ -24,7 +24,7 @@ func StartRpcServiceBlocking() {
 	pb.RegisterInitializeServiceServer(grpcServer, InitializeService)
 	pb.RegisterDqliteConnectionServer(grpcServer, DqliteService)
 
-	tlsConfig, err := security.GenerateRPCTLSConfig(global.App.NodeInfo.ServerCert, global.App.NodeInfo.ServerPrivateKey, global.App.ClusterInfo.CaCert)
+	tlsConfig, err := security.GenerateRPCTLSConfig(global.App.NodeInfo.ServerCert, global.App.NodeInfo.ServerPrivateKey, global.App.NodeInfo.ClusterCaCert)
 	if err != nil {
 		log.Fatalf("error generating tls config: %v", err)
 	}

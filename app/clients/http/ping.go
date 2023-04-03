@@ -1,16 +1,18 @@
 package http
 
 import (
+	"fmt"
+	"net/netip"
 	"time"
 
 	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
-func QuicPing(url string) (int, error) {
+func QuicPing(target netip.AddrPort) (int, error) {
 	client := netUtils.GetInsecureQuicHttpClient()
 
 	start := time.Now()
-	_, err := client.Head(url)
+	_, err := client.Head(fmt.Sprintf("https://%s/", target.String()))
 	if err != nil {
 		return -1, err
 	}

@@ -5,7 +5,7 @@
     "version": "1.0",
     "contact": {
       "name": "openPanel",
-      "url": "https://github.com/openPanel/core/issues"
+      "url": "https://github.com/openPanel/core"
     },
     "license": {
       "name": "Apache 2.0",
@@ -17,10 +17,10 @@
       "name": "DqliteConnection"
     },
     {
-      "name": "InitializeService"
+      "name": "LinkStateService"
     },
     {
-      "name": "LinkStateService"
+      "name": "InitializeService"
     }
   ],
   "consumes": [
@@ -114,8 +114,12 @@
             "$ref": "#/definitions/entpbNode"
           }
         },
-        "token": {
-          "type": "string"
+        "linkStates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/openPanelLinkState"
+          }
         }
       }
     },
@@ -173,6 +177,13 @@
             "type": "object",
             "$ref": "#/definitions/entpbNode"
           }
+        },
+        "linkStates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/openPanelLinkState"
+          }
         }
       }
     },
@@ -204,9 +215,5 @@
         }
       }
     }
-  },
-  "externalDocs": {
-    "description": "openPanel repository",
-    "url": "https://github.com/openPanel/core"
   }
 }

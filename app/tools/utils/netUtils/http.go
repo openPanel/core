@@ -19,3 +19,14 @@ func GetInsecureQuicHttpClient() *http.Client {
 		Timeout: time.Second * 10,
 	}
 }
+
+func GetInsecureHttpClient() *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+		Timeout: time.Second * 10,
+	}
+}
