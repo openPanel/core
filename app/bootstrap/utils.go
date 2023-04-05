@@ -22,11 +22,18 @@ func requireRoot() {
 	}
 }
 
-func requireInitialStartUp() {
+func requireFirstStartUp() {
 	// check file exist
 	if _, err := os.Stat(constant.DefaultDataDir + string(os.PathSeparator) + constant.DefaultLocalSqliteFilename); err == nil {
 		slog.Fatal("This instance has already been initialized, boot with no command to resume the server")
 	} else if !os.IsNotExist(err) {
+		slog.Fatalf("Failed to check if database file exists: %v", err)
+	}
+}
+
+func requireNonFirstStartUp() {
+	// check file exist
+	if _, err := os.Stat(constant.DefaultDataDir + string(os.PathSeparator) + constant.DefaultLocalSqliteFilename); err != nil {
 		slog.Fatalf("Failed to check if database file exists: %v", err)
 	}
 }

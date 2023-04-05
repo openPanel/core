@@ -19,4 +19,4 @@ plugins:
   - plugin: openapiv2
     out: third_party/OpenAPI
     strategy: all
-    opt: allow_merge=true,merge_file_name=openPanel
+    opt: allow_merge=true,merge_file_name=openPanel,disable_service_tags=true

@@ -11,11 +11,12 @@ import (
 )
 
 type newNodeMeta struct {
-	serverId   string
-	serverIp   net.IP
-	serverPort int
-	csr        []byte
-	privateKey []byte
+	serverId       string
+	serverPublicIp net.IP
+	serverListenIp net.IP
+	serverPort     int
+	csr            []byte
+	privateKey     []byte
 
 	isIndirectIP bool
 }
@@ -23,11 +24,11 @@ type newNodeMeta struct {
 func generateNewNodeMeta(ip net.IP, port int) newNodeMeta {
 	serverId := uuid.New().String()
 
-	var serverIp net.IP
+	var publicIp net.IP
 	var indirect bool
 	var err error
 
-	if ip.IsUnspecified() {
+	if ip.IsUnspecified() || ip.IsPrivate() || !ip.IsGlobalUnicast() {
 		var serverIps []net.IP
 		serverIps, indirect, err = netUtils.GetPublicIP()
 		if err != nil {
@@ -35,12 +36,12 @@ func generateNewNodeMeta(ip net.IP, port int) newNodeMeta {
 		}
 
 		if len(serverIps) > 1 {
-			log.Warnf("Multiple public IPs found: %v", serverIps)
-			log.Warnf("Using first IP: %v", serverIps[0])
+			log.Infof("Multiple public IPs found: %v", serverIps)
+			log.Infof("Using first IP: %v", serverIps[0])
 		}
-		serverIp = serverIps[0]
+		publicIp = serverIps[0]
 	} else {
-		serverIp = ip
+		publicIp = ip
 	}
 
 	serverPort := port
@@ -51,11 +52,12 @@ func generateNewNodeMeta(ip net.IP, port int) newNodeMeta {
 	}
 
 	return newNodeMeta{
-		serverId:     serverId,
-		serverIp:     serverIp,
-		serverPort:   serverPort,
-		csr:          signingCsr,
-		isIndirectIP: indirect,
-		privateKey:   privateKey,
+		serverId:       serverId,
+		serverPublicIp: publicIp,
+		serverListenIp: ip,
+		serverPort:     serverPort,
+		csr:            signingCsr,
+		isIndirectIP:   indirect,
+		privateKey:     privateKey,
 	}
 }

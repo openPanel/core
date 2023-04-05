@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/global"
+	"github.com/openPanel/core/app/manager/router"
 )
 
 func SaveLocalNodeInfo(i global.NodeInfo) error {
@@ -31,8 +32,8 @@ func LoadClusterInfo() (global.ClusterInfo, error) {
 	return *i, nil
 }
 
-func LoadNodesCache() ([]NodeCacheEntry, error) {
-	s := new([]NodeCacheEntry)
+func LoadNodesCache() ([]router.Node, error) {
+	s := new([]router.Node)
 	err := Load(constant.ConfigKeyNodesCache, s, constant.LocalStore)
 	if err != nil {
 		return nil, err
@@ -40,24 +41,6 @@ func LoadNodesCache() ([]NodeCacheEntry, error) {
 	return *s, nil
 }
 
-func AppendNodesCache(newEntry NodeCacheEntry) error {
-	s := new([]NodeCacheEntry)
-	err := Load(constant.ConfigKeyNodesCache, s, constant.LocalStore)
-	if err != nil {
-		return err
-	}
-
-	news := make([]NodeCacheEntry, 0, len(*s)+1)
-	for _, e := range *s {
-		if e.Id != newEntry.Id {
-			news = append(news, e)
-		} else {
-			news = append(news, newEntry)
-		}
-	}
-	return Save(constant.ConfigKeyNodesCache, news, constant.LocalStore)
-}
-
-func UpdateNodesCache(newEntries []NodeCacheEntry) error {
+func UpdateNodesCache(newEntries []router.Node) error {
 	return Save(constant.ConfigKeyNodesCache, newEntries, constant.LocalStore)
 }

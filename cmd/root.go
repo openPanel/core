@@ -1,41 +1,26 @@
 package cmd
 
 import (
-	"errors"
 	"log"
-	"net"
-	"strconv"
+	"os"
 
-	"github.com/spf13/cobra"
-
-	"github.com/openPanel/core/app/constant"
-	"github.com/openPanel/core/app/tools/utils/netUtils"
+	"github.com/urfave/cli/v2"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "openPanel",
-	Short: "Distributed linux panel",
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if err := netUtils.CheckPublicIp(*listenIp); err != nil {
-			return err
-		}
-		if *listenPort < 1 || *listenPort > 65535 {
-			return errors.New("Invalid port " + strconv.Itoa(*listenPort))
-		}
-		return nil
+var app = &cli.App{
+	Name:                 "openPanel",
+	Usage:                "Distributed linux panel",
+	Suggest:              true,
+	EnableBashCompletion: true,
+	Commands: []*cli.Command{
+		startCmd,
+		joinCmd,
+		resumeCmd,
 	},
 }
 
-var listenIp *net.IP
-var listenPort *int
-
-func init() {
-	listenIp = rootCmd.PersistentFlags().IPP("ip", "i", constant.DefaultListenIp, "IP address to listen on")
-	listenPort = rootCmd.PersistentFlags().IntP("port", "p", constant.DefaultListenPort, "Port to listen on")
-}
-
 func Execute() {
-	err := rootCmd.Execute()
+	err := app.Run(os.Args)
 	if err != nil {
 		log.Fatalf("%#v", err)
 	}

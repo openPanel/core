@@ -3,26 +3,26 @@ package client
 import (
 	"context"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware/providers/zap/v2"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/global"
+	"github.com/openPanel/core/app/tools/log"
 )
 
 func GetUnaryInterceptorOption(src, dst string) grpc.DialOption {
 	return grpc.WithChainUnaryInterceptor(
 		getRouterInfoUnaryInterceptor(src, dst),
-		logging.UnaryClientInterceptor(zap.InterceptorLogger(global.App.Logger.Named("grpc-client"))),
+		logging.UnaryClientInterceptor(log.InterceptorLogger(global.App.Logger.Named("grpc-client"))),
 	)
 }
 
 func GetStreamInterceptorOption(src, dst string) grpc.DialOption {
 	return grpc.WithChainStreamInterceptor(
 		getRouterInfoStreamInterceptor(src, dst),
-		logging.StreamClientInterceptor(zap.InterceptorLogger(global.App.Logger.Named("grpc-client-stream"))),
+		logging.StreamClientInterceptor(log.InterceptorLogger(global.App.Logger.Named("grpc-client-stream"))),
 	)
 }
 

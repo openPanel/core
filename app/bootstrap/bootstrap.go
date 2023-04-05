@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/netip"
 
+	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/clients/http"
 	"github.com/openPanel/core/app/clients/rpc"
 	"github.com/openPanel/core/app/config"
@@ -12,12 +13,11 @@ import (
 	"github.com/openPanel/core/app/manager/cron"
 	"github.com/openPanel/core/app/services"
 	"github.com/openPanel/core/app/tools/security"
-	"github.com/openPanel/core/app/tools/utils"
 )
 
 // Start the first node of a cluster
 func Start(listenIp net.IP, listenPort int) {
-	requireInitialStartUp()
+	requireFirstStartUp()
 
 	commonInit()
 	meta := generateNewNodeMeta(listenIp, listenPort)
@@ -38,7 +38,8 @@ func Start(listenIp net.IP, listenPort int) {
 		ServerCert:       localServerCert,
 		ServerPrivateKey: meta.privateKey,
 		ServerId:         meta.serverId,
-		ServerIp:         meta.serverIp,
+		ServerPublicIP:   meta.serverPublicIp,
+		ServerListenIP:   meta.serverListenIp,
 		ServerPort:       meta.serverPort,
 		ClusterCaCert:    caCert,
 		IsIndirectIP:     meta.isIndirectIP,
@@ -77,26 +78,27 @@ func Start(listenIp net.IP, listenPort int) {
 
 	lateInit()
 
-	utils.WaitExit()
+	clean.WaitClean()
 }
 
 // Join a cluster
 func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
-	requireInitialStartUp()
+	requireFirstStartUp()
 
 	commonInit()
 
 	meta := generateNewNodeMeta(listenIp, listenPort)
 	target := netip.AddrPortFrom(netip.MustParseAddr(ip.String()), uint16(port))
 
-	registerInfo, err := http.GetInitialInfo(target, meta.serverIp, meta.serverPort, token, meta.csr, meta.serverId)
+	registerInfo, err := http.GetInitialInfo(target, meta.serverPublicIp, meta.serverPort, token, meta.csr, meta.serverId)
 	if err != nil {
 		log.Fatalf("Failed to get initial info: %v", err)
 	}
 
 	node := global.NodeInfo{
 		ServerId:         meta.serverId,
-		ServerIp:         meta.serverIp,
+		ServerPublicIP:   meta.serverPublicIp,
+		ServerListenIP:   meta.serverListenIp,
 		ServerPort:       meta.serverPort,
 		ServerCert:       registerInfo.ClientCert,
 		ServerPrivateKey: meta.privateKey,
@@ -124,11 +126,13 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 
 	lateInit()
 
-	utils.WaitExit()
+	clean.WaitClean()
 }
 
 // Resume resume a node to cluster
 func Resume() {
+	requireNonFirstStartUp()
+
 	commonInit()
 
 	var err error
@@ -155,7 +159,7 @@ func Resume() {
 			}
 		}
 
-		addrs, err := rpc.UpdateRouterInfo(targets)
+		addrs, err := rpc.TryUpdateRouterInfo(targets)
 		if err != nil {
 			log.Fatalf("Failed to update router info: %v", err)
 		}
@@ -171,12 +175,14 @@ func Resume() {
 	}
 
 	go services.StartRpcServiceBlocking()
-	log.Infof("RPC service started on %s:%d", global.App.NodeInfo.ServerIp, global.App.NodeInfo.ServerPort)
+	log.Infof("RPC service started on %s:%d", global.App.NodeInfo.ServerListenIP, global.App.NodeInfo.ServerPort)
 
 	go services.StartHttpServiceBlocking()
-	log.Infof("HTTP service started on %s:%d", global.App.NodeInfo.ServerIp, global.App.NodeInfo.ServerPort)
+	log.Infof("HTTP service started on %s:%d", global.App.NodeInfo.ServerListenIP, global.App.NodeInfo.ServerPort)
 
 	lateInit()
+
+	clean.WaitClean()
 }
 
 func commonInit() {

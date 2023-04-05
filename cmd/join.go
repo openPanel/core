@@ -1,37 +1,46 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
+	"net"
 
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v2"
 
 	"github.com/openPanel/core/app/bootstrap"
+	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
-var joinCmd = &cobra.Command{
-	Use:   "join <address> <token>",
-	Short: "Join a existing panel cluster",
-	Long:  `Enable a new node to join an existing distributed cluster. Address can belong to any node in the cluster.`,
-	Run:   joinAction,
-}
+var joinCmd = &cli.Command{
+	Name:  "join",
+	Usage: "Join a existing panel cluster",
+	Flags: []cli.Flag{
+		&cli.GenericFlag{
+			Name:  "ip",
+			Value: NewIP(constant.DefaultListenIp),
+			Usage: "IP address to listen on",
+		},
+		&cli.GenericFlag{
+			Name:  "port",
+			Value: NewPort(constant.DefaultListenPort),
+			Usage: "Port to listen on",
+		},
+	},
+	Description: "Enable a new node to join an existing distributed cluster. Address can belong to any node in the cluster.",
+	ArgsUsage:   "<address> <token>",
+	Action: func(context *cli.Context) error {
+		if context.NArg() != 2 {
+			return cli.ShowCommandHelp(context, "join")
+		}
+		address := context.Args().Get(0)
+		token := context.Args().Get(1)
 
-func joinAction(cmd *cobra.Command, args []string) {
-	if len(args) != 2 {
-		_, _ = fmt.Fprintln(os.Stderr, "Invalid number of arguments")
-		_ = cmd.Help()
-		return
-	}
+		ip, port := netUtils.AssertPublicAddress(address)
 
-	address := args[0]
-	token := args[1]
+		listenIP := context.Generic("ip").(*IP)
+		listenPort := context.Generic("port").(*Port)
 
-	ip, port := netUtils.AssertPublicAddress(address)
+		bootstrap.Join(net.IP(*listenIP), int(*listenPort), ip, port, token)
 
-	bootstrap.Join(*listenIp, *listenPort, ip, port, token)
-}
-
-func init() {
-	rootCmd.AddCommand(joinCmd)
+		return nil
+	},
 }

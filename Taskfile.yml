@@ -7,21 +7,21 @@ tasks:
   build-release:
     cmds:
       - "go build
-        -tags 'release osusergo netgo static_build sqlite_omit_load_extension sqlite_foreign_keys'
+        -tags 'urfave_cli_no_docs release osusergo netgo static_build sqlite_omit_load_extension sqlite_foreign_keys'
         -trimpath -ldflags '-linkmode \"external\" -s -w -extldflags \"-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a\"'
         -o ./bin/openPanel github.com/openPanel/core"
 
-  build-static-debug:
+  build-debug:
     cmds:
       - "go build
-        -tags 'osusergo netgo static_build sqlite_omit_load_extension sqlite_foreign_keys'
+        -tags 'urfave_cli_no_docs osusergo netgo static_build sqlite_omit_load_extension sqlite_foreign_keys'
         -ldflags '-linkmode \"external\" -extldflags \"-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a\"'
         -o ./bin/openPanel.debug github.com/openPanel/core"
 
-  build-static-analysis:
+  build-analysis:
     cmds:
       - "go build
-        -tags 'osusergo netgo static_build sqlite_omit_load_extension sqlite_foreign_keys'
+        -tags 'urfave_cli_no_docs osusergo netgo static_build sqlite_omit_load_extension sqlite_foreign_keys'
         -ldflags '-linkmode \"external\" -extldflags \"-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a\"'
         -gcflags \"all=-N -l\"
         -o ./bin/openPanel.analysis github.com/openPanel/core"

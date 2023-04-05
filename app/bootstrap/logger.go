@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/global"
 	customLog "github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/tools/utils/fileUtils"
@@ -46,4 +47,12 @@ func initLogger() {
 	logger.Info("Logger initialized at " + logFile.Name())
 
 	customLog.UpdateLogger(logger.Sugar())
+
+	clean.RegisterCleanup(func() {
+		customLog.Info("Syncing log file")
+		err := logFile.Sync()
+		if err != nil {
+			customLog.Info("Failed to sync log file: " + err.Error())
+		}
+	})
 }

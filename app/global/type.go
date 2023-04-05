@@ -6,7 +6,8 @@ import (
 
 type NodeInfo struct {
 	ServerId         string
-	ServerIp         net.IP
+	ServerPublicIP   net.IP
+	ServerListenIP   net.IP
 	ServerPort       int
 	ServerCert       []byte
 	ServerPrivateKey []byte

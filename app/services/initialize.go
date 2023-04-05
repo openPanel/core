@@ -58,12 +58,6 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 		}
 	}
 
-	updatedPbNode := &pb.Node{
-		Id:   request.ServerID,
-		Ip:   request.Ip,
-		Port: int64(request.Port),
-	}
-
 	errs := make([]error, 0)
 	wg := sync.WaitGroup{}
 	wg.Add(len(nodes))
@@ -74,7 +68,7 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 		}
 		go func(node *shared.Node) {
 			defer wg.Done()
-			err := rpc.NotifyNodeUpdate(node.ID, updatedPbNode)
+			err := rpc.NotifyNodeUpdate(node.ID)
 			if err != nil {
 				log.Warnf("failed to notify node %s of update: %s", node.ID, err)
 				errs = append(errs, err)
@@ -83,7 +77,8 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 	}
 	wg.Wait()
 
-	if len(errs) > 0 {
+	// if more than half of nodes failed to notify, return error
+	if len(errs) > len(nodes)/2 {
 		singleErr := errors.New("failed to notify all nodes of update")
 		for _, err := range errs {
 			singleErr = errors.Wrap(singleErr, err.Error())

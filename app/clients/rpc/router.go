@@ -4,13 +4,14 @@ import (
 	"context"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/tools/rpc"
 )
 
 // NotifyNodeUpdate part of the broadcast after a node status change
-func NotifyNodeUpdate(target string, updateNode *pb.Node) error {
+func NotifyNodeUpdate(target string) error {
 	conn, err := rpc.DialWithServerId(target)
 	if err != nil {
 		return err
@@ -20,14 +21,12 @@ func NotifyNodeUpdate(target string, updateNode *pb.Node) error {
 	}(conn)
 
 	client := pb.NewLinkStateServiceClient(conn)
-	_, err = client.NotifyNodeUpdate(context.Background(), &pb.NodeUpdateRequest{
-		UpdatedNode: updateNode,
-	})
+	_, err = client.NotifyNodeUpdate(context.Background(), &emptypb.Empty{})
 	return err
 }
 
 // UpdateLinkState part of the broadcast after latency estimation
-func UpdateLinkState(target string, linkState *[]*pb.LinkState) error {
+func UpdateLinkState(target string, linkState []*pb.LinkState) error {
 	conn, err := rpc.DialWithServerId(target)
 	if err != nil {
 		return err
@@ -38,7 +37,7 @@ func UpdateLinkState(target string, linkState *[]*pb.LinkState) error {
 
 	client := pb.NewLinkStateServiceClient(conn)
 	_, err = client.UpdateLinkState(context.Background(), &pb.LinkStateUpdateRequest{
-		LinkState: *linkState,
+		LinkState: linkState,
 	})
 	return err
 }

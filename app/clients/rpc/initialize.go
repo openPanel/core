@@ -16,15 +16,15 @@ import (
 	"github.com/openPanel/core/app/tools/rpc"
 )
 
-// UpdateRouterInfo A node that is not starting for the first time tries to
+// TryUpdateRouterInfo A node that is not starting for the first time tries to
 // load the current cluster information from one of its neighbors
-func UpdateRouterInfo(targets []Target) ([]netip.AddrPort, error) {
+func TryUpdateRouterInfo(targets []Target) ([]netip.AddrPort, error) {
 	var addrs []netip.AddrPort
 	action := func(attempt uint) error {
 		currentTarget := targets[attempt]
 		conn, err := rpc.DialWithAddress(currentTarget.AddrPort.String(), currentTarget.ServerId)
 		if err != nil {
-			log.Infof("updateRouterInfo: failed to connect to %s: %s", currentTarget.AddrPort.String(), err)
+			log.Infof("failed to connect to %s: %s", currentTarget.AddrPort.String(), err)
 			return err
 		}
 		defer func(conn *grpc.ClientConn) {
@@ -37,9 +37,9 @@ func UpdateRouterInfo(targets []Target) ([]netip.AddrPort, error) {
 			return err
 		}
 
-		var cache = make([]config.NodeCacheEntry, 0, len(info.Nodes))
+		var cache = make([]router.Node, 0, len(info.Nodes))
 		for _, node := range info.Nodes {
-			cache = append(cache, config.NodeCacheEntry{
+			cache = append(cache, router.Node{
 				Id:       node.Id,
 				AddrPort: netip.AddrPortFrom(netip.MustParseAddr(node.Ip), uint16(node.Port)),
 			})
@@ -58,9 +58,6 @@ func UpdateRouterInfo(targets []Target) ([]netip.AddrPort, error) {
 			}] = int(ls.Latency)
 		}
 		router.UpdateRouterInfo(routerInfo)
-
-		// FIXME: broadcast link states to other nodes
-		router.EstimateLatencies()
 
 		addrs = make([]netip.AddrPort, len(info.Nodes))
 		for i, node := range info.Nodes {

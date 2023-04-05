@@ -11,29 +11,37 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
+	"github.com/openPanel/core/app/tools/middleware/gateway"
 	"github.com/openPanel/core/app/tools/security"
 	"github.com/openPanel/core/third_party/OpenAPI"
 )
 
-func getGrpcMux() *runtime.ServeMux {
+func initGrpcGatewayMux() *runtime.ServeMux {
 	unixListener, err := net.Listen("unix", "")
 	if err != nil {
 		log.Fatalf("error listening: %v", err)
 	}
 
 	go func() {
+		grpcServer := newGrpcServer()
+
 		if err := grpcServer.Serve(unixListener); err != nil {
-			log.Fatalf("error serving loopback grpc: %v", err)
+			log.Fatalf("error serving loop back grpc: %v", err)
 		}
 
-		// TODO: add graceful stop
+		clean.RegisterCleanup(func() {
+			grpcServer.GracefulStop()
+		})
 	}()
 
-	grpcMux := runtime.NewServeMux()
+	grpcMux := runtime.NewServeMux(
+		runtime.WithIncomingHeaderMatcher(gateway.CustomMatcher),
+	)
 
 	err = pb.RegisterInitializeServiceHandlerFromEndpoint(
 		context.Background(),
@@ -52,9 +60,23 @@ func getGrpcMux() *runtime.ServeMux {
 	return grpcMux
 }
 
+func wrapGrpcGatewayMux(mux *runtime.ServeMux) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		headers := r.Header
+		if headers.Get(constant.RPCSourceMetadataKey) == "" {
+			headers.Set(constant.RPCSourceMetadataKey, constant.RPCDefaultSource)
+		}
+		if headers.Get(constant.RPCDestinationMetadataKey) == "" {
+			headers.Set(constant.RPCDestinationMetadataKey, global.App.NodeInfo.ServerId)
+		}
+
+		mux.ServeHTTP(w, r)
+	})
+}
+
 func getServerHandler() http.HandlerFunc {
 	router := httprouter.New()
-	router.NotFound = getGrpcMux()
+	router.NotFound = wrapGrpcGatewayMux(initGrpcGatewayMux())
 	router.Handler("GET", "/docs/*filepath", http.StripPrefix("/docs", OpenAPI.SwaggerUIHandler))
 	return router.ServeHTTP
 }
@@ -69,7 +91,7 @@ func StartHttpServiceBlocking() {
 	if global.App.NodeInfo.IsIndirectIP {
 		addr = constant.DefaultListenIp.String()
 	} else {
-		addr = global.App.NodeInfo.ServerIp.String()
+		addr = global.App.NodeInfo.ServerListenIP.String()
 	}
 
 	s := &http.Server{
@@ -81,4 +103,11 @@ func StartHttpServiceBlocking() {
 	if err = s.ListenAndServeTLS("", ""); err != nil {
 		log.Fatalf("error serving http: %v", err)
 	}
+
+	clean.RegisterCleanup(func() {
+		err := s.Shutdown(context.Background())
+		if err != nil {
+			log.Warnf("error shutting down http server: %v", err)
+		}
+	})
 }

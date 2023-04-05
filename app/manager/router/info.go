@@ -37,6 +37,17 @@ func AddNodes(ns []Node) {
 	}
 }
 
+func SetNodes(ns []Node) {
+	nodesLock.Lock()
+	defer nodesLock.Unlock()
+	nodes = make(map[string]Node)
+	for _, node := range ns {
+		nodes[node.Id] = node
+	}
+
+	filterRouterInfos("")
+}
+
 func DeleteNode(id string) {
 	nodesLock.Lock()
 	defer nodesLock.Unlock()

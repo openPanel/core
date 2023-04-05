@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 
+	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/generated/db/shared"
 	"github.com/openPanel/core/app/global"
@@ -60,6 +61,21 @@ func createSharedDatabase(clusterAddrs *[]string) (*shared.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	clean.RegisterCleanup(func() {
+		err := db.Close()
+		if err != nil {
+			log.Warn("Failed to close shared database: %v", err)
+		}
+		err = app.Handover(context.Background())
+		if err != nil {
+			log.Warn("Failed to handover dqlite: %v", err)
+		}
+		err = app.Close()
+		if err != nil {
+			log.Warn("Failed to close dqlite: %v", err)
+		}
+	})
 
 	return client, nil
 }

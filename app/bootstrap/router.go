@@ -13,7 +13,7 @@ func createEmptyNetGraph() {
 		{
 			Id: global.App.NodeInfo.ServerId,
 			AddrPort: netip.AddrPortFrom(
-				netip.MustParseAddr(global.App.NodeInfo.ServerIp.String()),
+				netip.MustParseAddr(global.App.NodeInfo.ServerPublicIP.String()),
 				uint16(global.App.NodeInfo.ServerPort),
 			),
 		},
@@ -32,7 +32,7 @@ func createFullNetGraphAtJoin(resp *pb.RegisterResponse) {
 	nodes = append(nodes, router.Node{
 		Id: global.App.NodeInfo.ServerId,
 		AddrPort: netip.AddrPortFrom(
-			netip.MustParseAddr(global.App.NodeInfo.ServerIp.String()),
+			netip.MustParseAddr(global.App.NodeInfo.ServerPublicIP.String()),
 			uint16(global.App.NodeInfo.ServerPort),
 		),
 	})
@@ -48,11 +48,4 @@ func createFullNetGraphAtJoin(resp *pb.RegisterResponse) {
 	}
 
 	router.UpdateRouterInfo(edges)
-
-	// FIXME: broadcast link states to other nodes
-	router.EstimateLatencies()
-}
-
-func createFullNetGraphAtResume(resp *pb.GetNodesInfoResponse) {
-
 }

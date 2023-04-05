@@ -29,6 +29,6 @@ message NodeUpdateRequest {
 service LinkStateService {
   // Update the link state of the node. Part of a broadcast.
   rpc UpdateLinkState(LinkStateUpdateRequest) returns (google.protobuf.Empty);
-  // Indicate that the info of this node should be reload.
-  rpc NotifyNodeUpdate(NodeUpdateRequest) returns (google.protobuf.Empty);
+  // Indicate that the node status have changed.
+  rpc NotifyNodeUpdate(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

@@ -12,17 +12,6 @@
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     }
   },
-  "tags": [
-    {
-      "name": "DqliteConnection"
-    },
-    {
-      "name": "LinkStateService"
-    },
-    {
-      "name": "InitializeService"
-    }
-  ],
   "consumes": [
     "application/json"
   ],

@@ -30,8 +30,8 @@ const (
 type LinkStateServiceClient interface {
 	// Update the link state of the node. Part of a broadcast.
 	UpdateLinkState(ctx context.Context, in *LinkStateUpdateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	// Indicate that the info of this node should be reload.
-	NotifyNodeUpdate(ctx context.Context, in *NodeUpdateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Indicate that the node status have changed.
+	NotifyNodeUpdate(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type linkStateServiceClient struct {
@@ -51,7 +51,7 @@ func (c *linkStateServiceClient) UpdateLinkState(ctx context.Context, in *LinkSt
 	return out, nil
 }
 
-func (c *linkStateServiceClient) NotifyNodeUpdate(ctx context.Context, in *NodeUpdateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *linkStateServiceClient) NotifyNodeUpdate(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, LinkStateService_NotifyNodeUpdate_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -66,8 +66,8 @@ func (c *linkStateServiceClient) NotifyNodeUpdate(ctx context.Context, in *NodeU
 type LinkStateServiceServer interface {
 	// Update the link state of the node. Part of a broadcast.
 	UpdateLinkState(context.Context, *LinkStateUpdateRequest) (*emptypb.Empty, error)
-	// Indicate that the info of this node should be reload.
-	NotifyNodeUpdate(context.Context, *NodeUpdateRequest) (*emptypb.Empty, error)
+	// Indicate that the node status have changed.
+	NotifyNodeUpdate(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 
 // UnimplementedLinkStateServiceServer should be embedded to have forward compatible implementations.
@@ -77,7 +77,7 @@ type UnimplementedLinkStateServiceServer struct {
 func (UnimplementedLinkStateServiceServer) UpdateLinkState(context.Context, *LinkStateUpdateRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateLinkState not implemented")
 }
-func (UnimplementedLinkStateServiceServer) NotifyNodeUpdate(context.Context, *NodeUpdateRequest) (*emptypb.Empty, error) {
+func (UnimplementedLinkStateServiceServer) NotifyNodeUpdate(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NotifyNodeUpdate not implemented")
 }
 
@@ -111,7 +111,7 @@ func _LinkStateService_UpdateLinkState_Handler(srv interface{}, ctx context.Cont
 }
 
 func _LinkStateService_NotifyNodeUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NodeUpdateRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func _LinkStateService_NotifyNodeUpdate_Handler(srv interface{}, ctx context.Con
 		FullMethod: LinkStateService_NotifyNodeUpdate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LinkStateServiceServer).NotifyNodeUpdate(ctx, req.(*NodeUpdateRequest))
+		return srv.(LinkStateServiceServer).NotifyNodeUpdate(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

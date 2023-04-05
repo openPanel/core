@@ -12,6 +12,9 @@ import (
 )
 
 func CheckPublicIp(ip net.IP) error {
+	if ip.IsUnspecified() {
+		return nil
+	}
 	if !ip.IsGlobalUnicast() {
 		return errors.New("IP address is not global unicast address " + ip.String())
 	}
