@@ -819,9 +819,22 @@ func (m *NodeMutation) OldName(ctx context.Context) (v string, err error) {
 	return oldValue.Name, nil
 }
 
+// ClearName clears the value of the "name" field.
+func (m *NodeMutation) ClearName() {
+	m.name = nil
+	m.clearedFields[node.FieldName] = struct{}{}
+}
+
+// NameCleared returns if the "name" field was cleared in this mutation.
+func (m *NodeMutation) NameCleared() bool {
+	_, ok := m.clearedFields[node.FieldName]
+	return ok
+}
+
 // ResetName resets all changes to the "name" field.
 func (m *NodeMutation) ResetName() {
 	m.name = nil
+	delete(m.clearedFields, node.FieldName)
 }
 
 // SetIP sets the "ip" field.
@@ -1155,6 +1168,9 @@ func (m *NodeMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *NodeMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(node.FieldName) {
+		fields = append(fields, node.FieldName)
+	}
 	if m.FieldCleared(node.FieldComment) {
 		fields = append(fields, node.FieldComment)
 	}
@@ -1172,6 +1188,9 @@ func (m *NodeMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *NodeMutation) ClearField(name string) error {
 	switch name {
+	case node.FieldName:
+		m.ClearName()
+		return nil
 	case node.FieldComment:
 		m.ClearComment()
 		return nil

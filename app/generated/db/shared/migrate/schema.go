@@ -35,7 +35,7 @@ var (
 		{Name: "id", Type: field.TypeString},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "name", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString, Nullable: true},
 		{Name: "ip", Type: field.TypeString},
 		{Name: "port", Type: field.TypeInt, Default: 40123},
 		{Name: "comment", Type: field.TypeString, Nullable: true},

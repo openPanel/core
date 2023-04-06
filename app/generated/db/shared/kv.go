@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/openPanel/core/app/generated/db/shared/kv"
 )
@@ -25,7 +26,8 @@ type KV struct {
 	// Value holds the value of the "value" field.
 	Value string `json:"value,omitempty"`
 	// ExpiresAt holds the value of the "expires_at" field.
-	ExpiresAt time.Time `json:"expires_at,omitempty"`
+	ExpiresAt    time.Time `json:"expires_at,omitempty"`
+	selectValues sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -40,7 +42,7 @@ func (*KV) scanValues(columns []string) ([]any, error) {
 		case kv.FieldCreatedAt, kv.FieldUpdatedAt, kv.FieldExpiresAt:
 			values[i] = new(sql.NullTime)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type KV", columns[i])
+			values[i] = new(sql.UnknownType)
 		}
 	}
 	return values, nil
@@ -90,9 +92,17 @@ func (k *KV) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				k.ExpiresAt = value.Time
 			}
+		default:
+			k.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
+}
+
+// GetValue returns the ent.Value that was dynamically selected and assigned to the KV.
+// This includes values selected through modifiers, order, etc.
+func (k *KV) GetValue(name string) (ent.Value, error) {
+	return k.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this KV.

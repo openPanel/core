@@ -6,7 +6,6 @@ import (
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/openPanel/core/app/config"
 	"github.com/openPanel/core/app/db/repo/shared"
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/manager/router"
@@ -45,11 +44,6 @@ func (l linkStateService) NotifyNodeUpdate(ctx context.Context, _ *emptypb.Empty
 		}
 	}
 	router.SetNodes(routerNodes)
-
-	err = config.UpdateNodesCache(routerNodes)
-	if err != nil {
-		return nil, err
-	}
 
 	return &emptypb.Empty{}, nil
 }

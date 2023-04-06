@@ -5,9 +5,10 @@ import (
 
 	"github.com/openPanel/core/app/clients/http"
 	"github.com/openPanel/core/app/global"
+	"github.com/openPanel/core/app/global/log"
 )
 
-func EstimateLatencies() map[Edge]int {
+func EstimateAndStoreLatencies() map[Edge]int {
 	nodesLock.RLock()
 
 	wg := sync.WaitGroup{}
@@ -24,6 +25,7 @@ func EstimateLatencies() map[Edge]int {
 
 			latency, err := http.QuicPing(node.AddrPort)
 			if err != nil {
+				log.Debugf("failed to ping node %s: %v", node.AddrPort.String(), err)
 				return
 			}
 
@@ -35,6 +37,7 @@ func EstimateLatencies() map[Edge]int {
 	}
 
 	wg.Wait()
+	log.Debugf("estimated latencies: %v", infos)
 
 	nodesLock.RUnlock()
 

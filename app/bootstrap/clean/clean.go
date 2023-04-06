@@ -53,5 +53,8 @@ func WaitClean() {
 	}
 	wg.Wait()
 
+	log.Info("Cleaned up, exiting")
+	_ = log.Sync()
+
 	os.Exit(0)
 }

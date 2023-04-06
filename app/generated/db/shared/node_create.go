@@ -57,6 +57,14 @@ func (nc *NodeCreate) SetName(s string) *NodeCreate {
 	return nc
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (nc *NodeCreate) SetNillableName(s *string) *NodeCreate {
+	if s != nil {
+		nc.SetName(*s)
+	}
+	return nc
+}
+
 // SetIP sets the "ip" field.
 func (nc *NodeCreate) SetIP(s string) *NodeCreate {
 	nc.mutation.SetIP(s)
@@ -165,9 +173,6 @@ func (nc *NodeCreate) check() error {
 	}
 	if _, ok := nc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`shared: missing required field "Node.updated_at"`)}
-	}
-	if _, ok := nc.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`shared: missing required field "Node.name"`)}
 	}
 	if _, ok := nc.mutation.IP(); !ok {
 		return &ValidationError{Name: "ip", err: errors.New(`shared: missing required field "Node.ip"`)}
@@ -311,6 +316,12 @@ func (u *NodeUpsert) UpdateName() *NodeUpsert {
 	return u
 }
 
+// ClearName clears the value of the "name" field.
+func (u *NodeUpsert) ClearName() *NodeUpsert {
+	u.SetNull(node.FieldName)
+	return u
+}
+
 // SetIP sets the "ip" field.
 func (u *NodeUpsert) SetIP(v string) *NodeUpsert {
 	u.Set(node.FieldIP, v)
@@ -435,6 +446,13 @@ func (u *NodeUpsertOne) SetName(v string) *NodeUpsertOne {
 func (u *NodeUpsertOne) UpdateName() *NodeUpsertOne {
 	return u.Update(func(s *NodeUpsert) {
 		s.UpdateName()
+	})
+}
+
+// ClearName clears the value of the "name" field.
+func (u *NodeUpsertOne) ClearName() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.ClearName()
 	})
 }
 
@@ -733,6 +751,13 @@ func (u *NodeUpsertBulk) SetName(v string) *NodeUpsertBulk {
 func (u *NodeUpsertBulk) UpdateName() *NodeUpsertBulk {
 	return u.Update(func(s *NodeUpsert) {
 		s.UpdateName()
+	})
+}
+
+// ClearName clears the value of the "name" field.
+func (u *NodeUpsertBulk) ClearName() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.ClearName()
 	})
 }
 

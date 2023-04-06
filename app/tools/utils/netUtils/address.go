@@ -9,9 +9,14 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/openPanel/core/app/constant"
+	"github.com/openPanel/core/app/global"
 )
 
 func CheckPublicIp(ip net.IP) error {
+	if global.IsDev() {
+		return nil
+	}
+
 	if ip.IsUnspecified() {
 		return nil
 	}

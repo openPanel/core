@@ -29,7 +29,7 @@ message Node {
 
   google.protobuf.Timestamp updated_at = 536870901;
 
-  string name = 2;
+  google.protobuf.StringValue name = 2;
 
   string ip = 3;
 

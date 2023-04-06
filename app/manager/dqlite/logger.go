@@ -2,12 +2,13 @@ package dqlite
 
 import (
 	"github.com/canonical/go-dqlite/client"
+	"go.uber.org/zap"
 
 	"github.com/openPanel/core/app/global/log"
 )
 
 func getDqliteLogger() client.LogFunc {
-	namedLogger := log.Named("dqlite")
+	namedLogger := log.Named("dqlite").WithOptions(zap.AddCallerSkip(1))
 	return func(l client.LogLevel, format string, a ...any) {
 		switch l {
 		case client.LogNone:

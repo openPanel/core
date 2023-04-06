@@ -9,16 +9,15 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/openPanel/core/app/config"
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/router"
 	"github.com/openPanel/core/app/tools/rpc"
 )
 
-// TryUpdateRouterInfo A node that is not starting for the first time tries to
+// TryUpdateRouterNodeAndInfo A node that is not starting for the first time tries to
 // load the current cluster information from one of its neighbors
-func TryUpdateRouterInfo(targets []Target) ([]netip.AddrPort, error) {
+func TryUpdateRouterNodeAndInfo(targets []Target) ([]netip.AddrPort, error) {
 	var addrs []netip.AddrPort
 	action := func(attempt uint) error {
 		currentTarget := targets[attempt]
@@ -45,10 +44,7 @@ func TryUpdateRouterInfo(targets []Target) ([]netip.AddrPort, error) {
 			})
 		}
 
-		err = config.UpdateNodesCache(cache)
-		if err != nil {
-			return err
-		}
+		router.SetNodes(cache)
 
 		routerInfo := map[router.Edge]int{}
 		for _, ls := range info.LinkStates {
@@ -67,7 +63,7 @@ func TryUpdateRouterInfo(targets []Target) ([]netip.AddrPort, error) {
 		return nil
 	}
 
-	err := retry.Retry(action, strategy.Limit(uint(len(targets))))
+	err := retry.Retry(action, strategy.Limit(uint(len(targets))-1))
 	if err != nil {
 		return nil, err
 	}

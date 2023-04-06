@@ -18,8 +18,8 @@ import (
 // Start the first node of a cluster
 func Start(listenIp net.IP, listenPort int) {
 	requireFirstStartUp()
-
 	commonInit()
+
 	meta := generateNewNodeMeta(listenIp, listenPort)
 
 	caCert, caKey, err := security.GenerateCACertificate()
@@ -44,10 +44,13 @@ func Start(listenIp net.IP, listenPort int) {
 		ClusterCaCert:    caCert,
 		IsIndirectIP:     meta.isIndirectIP,
 	}
+
 	err = config.SaveLocalNodeInfo(node)
 	if err != nil {
 		log.Fatalf("Failed to save node info: %v", err)
 	}
+	log.Infof("Node info saved")
+
 	global.App.NodeInfo = node
 
 	createEmptyNetGraph()
@@ -159,7 +162,7 @@ func Resume() {
 			}
 		}
 
-		addrs, err := rpc.TryUpdateRouterInfo(targets)
+		addrs, err := rpc.TryUpdateRouterNodeAndInfo(targets)
 		if err != nil {
 			log.Fatalf("Failed to update router info: %v", err)
 		}

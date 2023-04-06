@@ -9,12 +9,11 @@ import (
 
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/generated/pb"
-	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
 func GetInitialInfo(target netip.AddrPort, nodeIp net.IP, nodePort int, token string, csr []byte, serverId string) (*pb.RegisterResponse, error) {
-	var request = &pb.RegisterRequest{
+	request := &pb.RegisterRequest{
 		Ip:       nodeIp.String(),
 		Port:     int32(nodePort),
 		Token:    token,
@@ -28,10 +27,11 @@ func GetInitialInfo(target netip.AddrPort, nodeIp net.IP, nodePort int, token st
 
 	resp, err := r.R().
 		SetHeader("Content-Type", "application/json").
-		SetHeader(constant.RPCSourceMetadataKey, global.App.NodeInfo.ServerId).
+		SetHeader(constant.RPCSourceMetadataKey, serverId).
 		SetBody(request).
-		SetResult(response).
+		//SetResult(response).
 		Post("https://" + target.String() + "/initialize")
+	println(resp.String())
 	if err != nil {
 		return nil, err
 	}

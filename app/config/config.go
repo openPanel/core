@@ -9,7 +9,19 @@ import (
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/db/repo/local"
 	"github.com/openPanel/core/app/db/repo/shared"
+	"github.com/openPanel/core/app/global/log"
+	"github.com/openPanel/core/app/manager/router"
 )
+
+func init() {
+	// just prevent import cycle
+	router.NodePersistence = func(nodes []router.Node) {
+		err := UpdateNodesCache(nodes)
+		if err != nil {
+			log.Warnf("Failed to update nodes cache: %v", err)
+		}
+	}
+}
 
 func Load(key constant.Key, value any, store constant.Store) error {
 	var v string
@@ -25,7 +37,12 @@ func Load(key constant.Key, value any, store constant.Store) error {
 		value = nil
 		return err
 	}
-	err = json.Unmarshal([]byte(v), &value)
+	err = json.Unmarshal([]byte(v), value)
+	if err != nil {
+		log.Debugf("Error unmarshalling config key %s: %s", key, err.Error())
+		log.Debugf("Value: %s", v)
+	}
+
 	return err
 }
 

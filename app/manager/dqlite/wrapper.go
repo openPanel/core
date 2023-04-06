@@ -75,6 +75,7 @@ func createSharedDatabase(clusterAddrs *[]string) (*shared.Client, error) {
 		if err != nil {
 			log.Warn("Failed to close dqlite: %v", err)
 		}
+		log.Infof("Shared database closed")
 	})
 
 	return client, nil

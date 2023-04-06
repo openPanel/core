@@ -7,6 +7,7 @@ import (
 	"github.com/openPanel/core/app/db/db"
 	"github.com/openPanel/core/app/generated/db/local"
 	"github.com/openPanel/core/app/generated/db/local/kv"
+	"github.com/openPanel/core/app/global/log"
 )
 
 type kvRepo struct{}
@@ -25,8 +26,11 @@ func (r *kvRepo) Get(ctx context.Context, key string) (string, error) {
 		}
 	}
 
-	if v.ExpiresAt.IsZero() && v.ExpiresAt.Before(time.Now()) {
-		_, _ = db.GetLocalDb().KV.Delete().Where(kv.Key(key)).Exec(ctx)
+	if !v.ExpiresAt.IsZero() && v.ExpiresAt.Before(time.Now()) {
+		_, err = db.GetLocalDb().KV.Delete().Where(kv.Key(key)).Exec(ctx)
+		if err != nil {
+			log.Errorf("Failed to delete expired key %s: %s", key, err.Error())
+		}
 		return "", nil
 	}
 

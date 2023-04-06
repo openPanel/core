@@ -13,21 +13,23 @@ var scheduler = gocron.NewScheduler(time.UTC)
 
 func Start() {
 	registerDefaultCronTasks()
-	go scheduler.StartBlocking()
 
 	clean.RegisterCleanup(func() {
-		log.Info("cron manager: stopping scheduler")
 		scheduler.Stop()
 		log.Info("cron manager: scheduler stopped")
 
 	})
+
+	go scheduler.StartBlocking()
 }
 
 func Op(fn func(s *gocron.Scheduler)) {
 	fn(scheduler)
 }
 
-var DefaultCronTasks []func(s *gocron.Scheduler)
+type Task func(s *gocron.Scheduler)
+
+var DefaultCronTasks []Task
 
 func registerDefaultCronTasks() {
 	for _, task := range DefaultCronTasks {

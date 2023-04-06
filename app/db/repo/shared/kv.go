@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/openPanel/core/app/db/db"
-	"github.com/openPanel/core/app/generated/db/shared"
+	"github.com/openPanel/core/app/generated/db/local"
 	"github.com/openPanel/core/app/generated/db/shared/kv"
+	"github.com/openPanel/core/app/global/log"
 )
 
 type kvRepo struct{}
@@ -18,15 +19,18 @@ func (r *kvRepo) Get(ctx context.Context, key string) (string, error) {
 		Where(kv.Key(key)).
 		Only(ctx)
 	if err != nil {
-		if shared.IsNotFound(err) {
+		if local.IsNotFound(err) {
 			return "", nil
 		} else {
 			return "", err
 		}
 	}
 
-	if v.ExpiresAt.IsZero() && v.ExpiresAt.Before(time.Now()) {
-		_, _ = db.GetSharedDb().KV.Delete().Where(kv.Key(key)).Exec(ctx)
+	if !v.ExpiresAt.IsZero() && v.ExpiresAt.Before(time.Now()) {
+		_, err = db.GetSharedDb().KV.Delete().Where(kv.Key(key)).Exec(ctx)
+		if err != nil {
+			log.Errorf("Failed to delete expired key %s: %s", key, err.Error())
+		}
 		return "", nil
 	}
 
@@ -48,10 +52,12 @@ func (r *kvRepo) Set(ctx context.Context, key string, value string) error {
 }
 
 func (r *kvRepo) SetExpire(ctx context.Context, key string, value string, expiresAt time.Time) error {
-	_, err := db.GetSharedDb().KV.
+	return db.GetSharedDb().KV.
 		Create().
 		SetKey(key).
 		SetValue(value).
-		SetExpiresAt(expiresAt).Save(ctx)
-	return err
+		SetExpiresAt(expiresAt).
+		OnConflictColumns(kv.FieldKey).
+		UpdateValue().
+		Exec(ctx)
 }

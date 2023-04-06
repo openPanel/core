@@ -41,6 +41,20 @@ func (nu *NodeUpdate) SetName(s string) *NodeUpdate {
 	return nu
 }
 
+// SetNillableName sets the "name" field if the given value is not nil.
+func (nu *NodeUpdate) SetNillableName(s *string) *NodeUpdate {
+	if s != nil {
+		nu.SetName(*s)
+	}
+	return nu
+}
+
+// ClearName clears the value of the "name" field.
+func (nu *NodeUpdate) ClearName() *NodeUpdate {
+	nu.mutation.ClearName()
+	return nu
+}
+
 // SetIP sets the "ip" field.
 func (nu *NodeUpdate) SetIP(s string) *NodeUpdate {
 	nu.mutation.SetIP(s)
@@ -150,6 +164,9 @@ func (nu *NodeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := nu.mutation.Name(); ok {
 		_spec.SetField(node.FieldName, field.TypeString, value)
 	}
+	if nu.mutation.NameCleared() {
+		_spec.ClearField(node.FieldName, field.TypeString)
+	}
 	if value, ok := nu.mutation.IP(); ok {
 		_spec.SetField(node.FieldIP, field.TypeString, value)
 	}
@@ -196,6 +213,20 @@ func (nuo *NodeUpdateOne) SetUpdatedAt(t time.Time) *NodeUpdateOne {
 // SetName sets the "name" field.
 func (nuo *NodeUpdateOne) SetName(s string) *NodeUpdateOne {
 	nuo.mutation.SetName(s)
+	return nuo
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (nuo *NodeUpdateOne) SetNillableName(s *string) *NodeUpdateOne {
+	if s != nil {
+		nuo.SetName(*s)
+	}
+	return nuo
+}
+
+// ClearName clears the value of the "name" field.
+func (nuo *NodeUpdateOne) ClearName() *NodeUpdateOne {
+	nuo.mutation.ClearName()
 	return nuo
 }
 
@@ -337,6 +368,9 @@ func (nuo *NodeUpdateOne) sqlSave(ctx context.Context) (_node *Node, err error) 
 	}
 	if value, ok := nuo.mutation.Name(); ok {
 		_spec.SetField(node.FieldName, field.TypeString, value)
+	}
+	if nuo.mutation.NameCleared() {
+		_spec.ClearField(node.FieldName, field.TypeString)
 	}
 	if value, ok := nuo.mutation.IP(); ok {
 		_spec.SetField(node.FieldIP, field.TypeString, value)

@@ -25,7 +25,11 @@ func getDataInstanceFromTransferFn(fn any) any {
 }
 
 func getDstFromContext(ctx context.Context) (string, error) {
-	dsts := metadata.ValueFromIncomingContext(ctx, constant.RPCDestinationMetadataKey)
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", errors.New("No metadata found")
+	}
+	dsts := md.Get(constant.RPCDestinationMetadataKey)
 	if dsts == nil {
 		return "", errors.New("No metadata found")
 	}

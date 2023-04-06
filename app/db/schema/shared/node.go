@@ -22,6 +22,7 @@ func (Node) Fields() []ent.Field {
 			Immutable().
 			Annotations(entproto.Field(1)),
 		field.String("name").
+			Optional().
 			Annotations(entproto.Field(2)),
 		field.String("ip").
 			Annotations(entproto.Field(3)),

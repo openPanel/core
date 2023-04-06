@@ -1,8 +1,8 @@
 package constant
 
 const (
-	RPCSourceMetadataKey      = "Source"
-	RPCDestinationMetadataKey = "Destination"
+	RPCSourceMetadataKey      = "X-Source"
+	RPCDestinationMetadataKey = "X-Destination"
 
 	RPCDefaultSource = "browser"
 )

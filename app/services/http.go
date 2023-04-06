@@ -30,13 +30,14 @@ func initGrpcGatewayMux() *runtime.ServeMux {
 	go func() {
 		grpcServer := newGrpcServer()
 
+		clean.RegisterCleanup(func() {
+			grpcServer.GracefulStop()
+			log.Debug("unix grpc gateway stopped")
+		})
+
 		if err := grpcServer.Serve(unixListener); err != nil {
 			log.Fatalf("error serving loop back grpc: %v", err)
 		}
-
-		clean.RegisterCleanup(func() {
-			grpcServer.GracefulStop()
-		})
 	}()
 
 	grpcMux := runtime.NewServeMux(
@@ -62,12 +63,12 @@ func initGrpcGatewayMux() *runtime.ServeMux {
 
 func wrapGrpcGatewayMux(mux *runtime.ServeMux) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		headers := r.Header
-		if headers.Get(constant.RPCSourceMetadataKey) == "" {
-			headers.Set(constant.RPCSourceMetadataKey, constant.RPCDefaultSource)
+
+		if r.Header.Get(constant.RPCSourceMetadataKey) == "" {
+			r.Header.Set(constant.RPCSourceMetadataKey, constant.RPCDefaultSource)
 		}
-		if headers.Get(constant.RPCDestinationMetadataKey) == "" {
-			headers.Set(constant.RPCDestinationMetadataKey, global.App.NodeInfo.ServerId)
+		if r.Header.Get(constant.RPCDestinationMetadataKey) == "" {
+			r.Header.Set(constant.RPCDestinationMetadataKey, global.App.NodeInfo.ServerId)
 		}
 
 		mux.ServeHTTP(w, r)
@@ -100,14 +101,13 @@ func StartHttpServiceBlocking() {
 		Handler:   getServerHandler(),
 	}
 
-	if err = s.ListenAndServeTLS("", ""); err != nil {
-		log.Fatalf("error serving http: %v", err)
-	}
-
 	clean.RegisterCleanup(func() {
 		err := s.Shutdown(context.Background())
 		if err != nil {
 			log.Warnf("error shutting down http server: %v", err)
 		}
+		log.Infof("outer grpc gateway stopped")
 	})
+
+	_ = s.ListenAndServeTLS("", "")
 }

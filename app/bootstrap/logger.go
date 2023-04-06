@@ -37,7 +37,11 @@ func initLogger() {
 		zapcore.NewCore(fileEncoder, zapcore.AddSync(logFile), zapcore.InfoLevel),
 	)
 
-	logger := zap.New(core, zap.AddStacktrace(zapcore.WarnLevel), zap.AddCallerSkip(1))
+	logger := zap.New(
+		core,
+		zap.AddCaller(),
+		zap.AddStacktrace(zapcore.ErrorLevel),
+	)
 	if global.IsDev() {
 		logger = logger.WithOptions(zap.Development())
 	}

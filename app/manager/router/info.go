@@ -25,8 +25,19 @@ var routerDecision = make(map[string]netip.AddrPort)
 var rdLock = sync.RWMutex{}
 
 type Node struct {
-	Id string
-	netip.AddrPort
+	Id       string
+	AddrPort netip.AddrPort
+}
+
+// NodePersistence just prevent import cycle
+var NodePersistence func([]Node)
+
+func flattenNodes() []Node {
+	flat := make([]Node, 0, len(nodes))
+	for _, node := range nodes {
+		flat = append(flat, node)
+	}
+	return flat
 }
 
 func AddNodes(ns []Node) {
@@ -34,6 +45,10 @@ func AddNodes(ns []Node) {
 	defer nodesLock.Unlock()
 	for _, node := range ns {
 		nodes[node.Id] = node
+	}
+
+	if NodePersistence != nil {
+		NodePersistence(flattenNodes())
 	}
 }
 
@@ -45,6 +60,10 @@ func SetNodes(ns []Node) {
 		nodes[node.Id] = node
 	}
 
+	if NodePersistence != nil {
+		NodePersistence(flattenNodes())
+	}
+
 	filterRouterInfos("")
 }
 
@@ -52,6 +71,10 @@ func DeleteNode(id string) {
 	nodesLock.Lock()
 	defer nodesLock.Unlock()
 	delete(nodes, id)
+
+	if NodePersistence != nil {
+		NodePersistence(flattenNodes())
+	}
 
 	filterRouterInfos(id)
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func createEmptyNetGraph() {
-	router.AddNodes([]router.Node{
+	nodes := []router.Node{
 		{
 			Id: global.App.NodeInfo.ServerId,
 			AddrPort: netip.AddrPortFrom(
@@ -17,7 +17,8 @@ func createEmptyNetGraph() {
 				uint16(global.App.NodeInfo.ServerPort),
 			),
 		},
-	})
+	}
+	router.AddNodes(nodes)
 }
 
 func createFullNetGraphAtJoin(resp *pb.RegisterResponse) {

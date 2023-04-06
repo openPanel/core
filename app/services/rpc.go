@@ -41,5 +41,6 @@ func StartRpcServiceBlocking() {
 
 	clean.RegisterCleanup(func() {
 		grpcServer.GracefulStop()
+		log.Debug("grpc service stopped")
 	})
 }

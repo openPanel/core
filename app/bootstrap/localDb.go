@@ -18,13 +18,12 @@ import (
 )
 
 func getInitLocalDatabase() *local.Client {
-	file, err := fileUtils.RequireDataFile(constant.DefaultLocalSqliteFilename, os.O_RDWR|os.O_CREATE, 0644)
+	dir, err := fileUtils.RequireDataDir("")
 	if err != nil {
-		log.Fatalf("Failed to open local database file: %s", err)
+		log.Fatalf("Failed to create local database directory: %s", err)
 	}
-	_ = file.Close()
 
-	path, err := filepath.Abs(file.Name())
+	path, err := filepath.Abs(dir + string(os.PathSeparator) + constant.DefaultLocalSqliteFilename)
 	if err != nil {
 		log.Fatalf("Failed to get absolute path of local database file: %s", err)
 	}
@@ -47,6 +46,7 @@ func getInitLocalDatabase() *local.Client {
 		if err != nil {
 			log.Warn("Failed to close local database: %v", err)
 		}
+		log.Infof("Local database closed")
 	})
 
 	return client
