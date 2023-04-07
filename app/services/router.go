@@ -2,13 +2,13 @@ package services
 
 import (
 	"context"
-	"net/netip"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/openPanel/core/app/db/repo/shared"
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/manager/router"
+	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
 var LinkStateService pb.LinkStateServiceServer = new(linkStateService)
@@ -37,13 +37,10 @@ func (l linkStateService) NotifyNodeUpdate(ctx context.Context, _ *emptypb.Empty
 	routerNodes := make([]router.Node, len(eNodes))
 	for i, node := range eNodes {
 		routerNodes[i] = router.Node{
-			Id: node.ID,
-			AddrPort: netip.AddrPortFrom(
-				netip.MustParseAddr(node.IP),
-				uint16(node.Port)),
+			Id:       node.ID,
+			AddrPort: netUtils.NewAddPortWithString(node.IP, node.Port),
 		}
+		router.SetNodes(routerNodes)
 	}
-	router.SetNodes(routerNodes)
-
 	return &emptypb.Empty{}, nil
 }

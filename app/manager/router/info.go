@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+
+	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
 type Edge struct {
@@ -84,7 +86,7 @@ func UpdateNode(id string, ip net.IP, port int) {
 	defer nodesLock.Unlock()
 	nodes[id] = Node{
 		Id:       id,
-		AddrPort: netip.AddrPortFrom(netip.MustParseAddr(ip.String()), uint16(port)),
+		AddrPort: netUtils.NewAddrPortWithIP(ip, port),
 	}
 
 	filterRouterInfos(id)

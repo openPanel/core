@@ -13,7 +13,7 @@ import (
 
 func EstimateAndBroadcastLinkState() {
 	infos := router.EstimateAndStoreLatencies()
-	nodes, err := shared.NodeRepo.GetAll(context.Background())
+	nodes, err := shared.NodeRepo.GetBroadcastNodes(context.Background())
 	if err != nil {
 		log.Errorf("cron: failed to load nodes cache: %v", err)
 	}
@@ -34,6 +34,7 @@ func EstimateAndBroadcastLinkState() {
 	for _, node := range nodes {
 		go func(target string) {
 			defer wg.Done()
+
 			err := rpc.UpdateLinkState(target, linkStates)
 			if err != nil {
 				log.Warnf("cron: failed to broadcast link state to node %s: %v", target, err)

@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"net/netip"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -18,6 +17,7 @@ import (
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/router"
 	"github.com/openPanel/core/app/tools/security"
+	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
 var InitializeService pb.InitializeServiceServer = new(initializeService)
@@ -44,7 +44,7 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 		return nil, err
 	}
 
-	nodes, err := NodeRepo.GetAll(ctx)
+	nodes, err := NodeRepo.GetBroadcastNodes(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -62,10 +62,6 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 	wg := sync.WaitGroup{}
 	wg.Add(len(nodes))
 	for _, node := range nodes {
-		if node.ID == request.ServerID {
-			wg.Done()
-			continue
-		}
 		go func(node *shared.Node) {
 			defer wg.Done()
 			err := rpc.NotifyNodeUpdate(node.ID)
@@ -93,7 +89,7 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 	router.AddNodes([]router.Node{
 		{
 			Id:       request.ServerID,
-			AddrPort: netip.AddrPortFrom(netip.MustParseAddr(request.Ip), uint16(request.Port)),
+			AddrPort: netUtils.NewAddPortWithString(request.Ip, int(request.Port)),
 		},
 	})
 

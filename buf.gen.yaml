@@ -16,6 +16,9 @@ plugins:
   - plugin: grpc-gateway
     out: app/generated/pb
     opt: paths=source_relative
+  - plugin: go-json
+    out: app/generated/pb
+    opt: paths=source_relative
   - plugin: openapiv2
     out: third_party/OpenAPI
     strategy: all

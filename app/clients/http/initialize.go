@@ -29,9 +29,8 @@ func GetInitialInfo(target netip.AddrPort, nodeIp net.IP, nodePort int, token st
 		SetHeader("Content-Type", "application/json").
 		SetHeader(constant.RPCSourceMetadataKey, serverId).
 		SetBody(request).
-		//SetResult(response).
+		SetResult(response).
 		Post("https://" + target.String() + "/initialize")
-	println(resp.String())
 	if err != nil {
 		return nil, err
 	}

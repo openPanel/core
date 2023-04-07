@@ -23,7 +23,7 @@ func EstimateAndStoreLatencies() map[Edge]int {
 		go func(node Node) {
 			defer wg.Done()
 
-			latency, err := http.QuicPing(node.AddrPort)
+			latency, err := http.TcpPing(node.AddrPort)
 			if err != nil {
 				log.Debugf("failed to ping node %s: %v", node.AddrPort.String(), err)
 				return

@@ -1,18 +1,20 @@
 package bootstrap
 
 import (
+	"context"
 	"net"
-	"net/netip"
 
 	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/clients/http"
 	"github.com/openPanel/core/app/clients/rpc"
 	"github.com/openPanel/core/app/config"
+	"github.com/openPanel/core/app/db/repo/shared"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/cron"
 	"github.com/openPanel/core/app/services"
 	"github.com/openPanel/core/app/tools/security"
+	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
 // Start the first node of a cluster
@@ -66,6 +68,15 @@ func Start(listenIp net.IP, listenPort int) {
 	if err != nil {
 		log.Fatalf("Failed to save cluster info: %v", err)
 	}
+	err = shared.NodeRepo.AddNode(context.Background(),
+		global.App.NodeInfo.ServerId,
+		global.App.NodeInfo.ServerPublicIP.String(),
+		global.App.NodeInfo.ServerPort,
+	)
+	if err != nil {
+		log.Fatalf("Failed to add node to database: %v", err)
+		return
+	}
 
 	go services.StartRpcServiceBlocking()
 	log.Infof("RPC service started on %s:%d", listenIp.String(), listenPort)
@@ -91,7 +102,7 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 	commonInit()
 
 	meta := generateNewNodeMeta(listenIp, listenPort)
-	target := netip.AddrPortFrom(netip.MustParseAddr(ip.String()), uint16(port))
+	target := netUtils.NewAddrPortWithIP(ip, port)
 
 	registerInfo, err := http.GetInitialInfo(target, meta.serverPublicIp, meta.serverPort, token, meta.csr, meta.serverId)
 	if err != nil {
@@ -112,6 +123,7 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 	if err != nil {
 		log.Fatalf("Failed to save node info: %v", err)
 	}
+	global.App.NodeInfo = node
 
 	createFullNetGraphAtJoin(registerInfo)
 

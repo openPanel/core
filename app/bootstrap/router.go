@@ -1,20 +1,19 @@
 package bootstrap
 
 import (
-	"net/netip"
-
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/manager/router"
+	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
 func createEmptyNetGraph() {
 	nodes := []router.Node{
 		{
 			Id: global.App.NodeInfo.ServerId,
-			AddrPort: netip.AddrPortFrom(
-				netip.MustParseAddr(global.App.NodeInfo.ServerPublicIP.String()),
-				uint16(global.App.NodeInfo.ServerPort),
+			AddrPort: netUtils.NewAddrPortWithIP(
+				global.App.NodeInfo.ServerPublicIP,
+				global.App.NodeInfo.ServerPort,
 			),
 		},
 	}
@@ -22,21 +21,13 @@ func createEmptyNetGraph() {
 }
 
 func createFullNetGraphAtJoin(resp *pb.RegisterResponse) {
-	nodes := make([]router.Node, len(resp.Nodes)+1)
+	nodes := make([]router.Node, len(resp.Nodes))
 	for i, node := range resp.Nodes {
 		nodes[i] = router.Node{
 			Id:       node.Id,
-			AddrPort: netip.AddrPortFrom(netip.MustParseAddr(node.Ip), uint16(node.Port)),
+			AddrPort: netUtils.NewAddPortWithString(node.Ip, int(node.Port)),
 		}
 	}
-
-	nodes = append(nodes, router.Node{
-		Id: global.App.NodeInfo.ServerId,
-		AddrPort: netip.AddrPortFrom(
-			netip.MustParseAddr(global.App.NodeInfo.ServerPublicIP.String()),
-			uint16(global.App.NodeInfo.ServerPort),
-		),
-	})
 
 	router.AddNodes(nodes)
 
@@ -49,4 +40,6 @@ func createFullNetGraphAtJoin(resp *pb.RegisterResponse) {
 	}
 
 	router.UpdateRouterInfo(edges)
+
+	router.EstimateAndStoreLatencies()
 }

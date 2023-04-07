@@ -1,21 +1,25 @@
 package http
 
 import (
-	"fmt"
+	"net"
 	"net/netip"
 	"time"
-
-	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
-func QuicPing(target netip.AddrPort) (int, error) {
-	client := netUtils.GetInsecureQuicHttpClient()
-
-	start := time.Now()
-	_, err := client.Head(fmt.Sprintf("https://%s/", target.String()))
-	if err != nil {
-		return -1, err
+func TcpPing(target netip.AddrPort) (int, error) {
+	dialer := net.Dialer{
+		KeepAlive: -1,
+		Timeout:   5 * time.Second,
 	}
-	latency := time.Since(start).Milliseconds()
-	return int(latency), nil
+
+	tcpStart := time.Now()
+	tcpConn, err := dialer.Dial("tcp", target.String())
+	if err != nil {
+		return 0, err
+	}
+	defer func(tcpConn net.Conn) {
+		_ = tcpConn.Close()
+	}(tcpConn)
+	tcpLatency := time.Since(tcpStart).Milliseconds()
+	return int(tcpLatency), nil
 }

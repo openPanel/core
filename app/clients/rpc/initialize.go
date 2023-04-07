@@ -13,6 +13,7 @@ import (
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/router"
 	"github.com/openPanel/core/app/tools/rpc"
+	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
 // TryUpdateRouterNodeAndInfo A node that is not starting for the first time tries to
@@ -40,7 +41,7 @@ func TryUpdateRouterNodeAndInfo(targets []Target) ([]netip.AddrPort, error) {
 		for _, node := range info.Nodes {
 			cache = append(cache, router.Node{
 				Id:       node.Id,
-				AddrPort: netip.AddrPortFrom(netip.MustParseAddr(node.Ip), uint16(node.Port)),
+				AddrPort: netUtils.NewAddPortWithString(node.Ip, int(node.Port)),
 			})
 		}
 
@@ -57,7 +58,7 @@ func TryUpdateRouterNodeAndInfo(targets []Target) ([]netip.AddrPort, error) {
 
 		addrs = make([]netip.AddrPort, len(info.Nodes))
 		for i, node := range info.Nodes {
-			addrs[i] = netip.AddrPortFrom(netip.MustParseAddr(node.Ip), uint16(node.Port))
+			addrs[i] = netUtils.NewAddPortWithString(node.Ip, int(node.Port))
 		}
 
 		return nil

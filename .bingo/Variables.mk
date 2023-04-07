@@ -29,6 +29,12 @@ $(PROTOC_GEN_GO_GRPC): $(BINGO_DIR)/protoc-gen-go-grpc.mod
 	@echo "(re)installing $(GOBIN)/protoc-gen-go-grpc-v1.3.0"
 	@cd $(BINGO_DIR) && GOWORK=off $(GO) build -mod=mod -modfile=protoc-gen-go-grpc.mod -o=$(GOBIN)/protoc-gen-go-grpc-v1.3.0 "google.golang.org/grpc/cmd/protoc-gen-go-grpc"
 
+PROTOC_GEN_GO_JSON := $(GOBIN)/protoc-gen-go-json-v1.1.0
+$(PROTOC_GEN_GO_JSON): $(BINGO_DIR)/protoc-gen-go-json.mod
+	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
+	@echo "(re)installing $(GOBIN)/protoc-gen-go-json-v1.1.0"
+	@cd $(BINGO_DIR) && GOWORK=off $(GO) build -mod=mod -modfile=protoc-gen-go-json.mod -o=$(GOBIN)/protoc-gen-go-json-v1.1.0 "github.com/mitchellh/protoc-gen-go-json"
+
 PROTOC_GEN_GO := $(GOBIN)/protoc-gen-go-v1.30.0
 $(PROTOC_GEN_GO): $(BINGO_DIR)/protoc-gen-go.mod
 	@# Install binary/ries using Go 1.14+ build command. This is using bwplotka/bingo-controlled, separate go module with pinned dependencies.
