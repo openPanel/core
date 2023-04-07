@@ -64,6 +64,10 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 	for _, node := range nodes {
 		go func(node *shared.Node) {
 			defer wg.Done()
+			if node.ID == request.ServerID {
+				return
+			}
+
 			err := rpc.NotifyNodeUpdate(node.ID)
 			if err != nil {
 				log.Warnf("failed to notify node %s of update: %s", node.ID, err)
@@ -75,11 +79,7 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 
 	// if more than half of nodes failed to notify, return error
 	if len(errs) > len(nodes)/2 {
-		singleErr := errors.New("failed to notify all nodes of update")
-		for _, err := range errs {
-			singleErr = errors.Wrap(singleErr, err.Error())
-		}
-		return nil, singleErr
+		log.Errorf("failed to notify more than half of nodes of update")
 	}
 
 	currentRouterInfos := router.GetRouterInfo()

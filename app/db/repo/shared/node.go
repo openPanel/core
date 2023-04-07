@@ -30,7 +30,7 @@ func (r *nodeRepo) GetBroadcastNodes(ctx context.Context) ([]*shared.Node, error
 	if err != nil {
 		return nil, err
 	}
-	broadcastNodes := make([]*shared.Node, 0, len(nodes)-1)
+	broadcastNodes := make([]*shared.Node, 0)
 	for _, node := range nodes {
 		if node.ID != global.App.NodeInfo.ServerId {
 			broadcastNodes = append(broadcastNodes, node)

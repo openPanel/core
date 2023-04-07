@@ -1,10 +1,12 @@
 package netUtils
 
 import (
+	"context"
 	"io"
 	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -24,12 +26,11 @@ func GetPublicIP() (ips []net.IP, indirect bool, err error) {
 
 	log.Debug("No public IP found from local network interfaces")
 
-	// FIXME: cloudflare may get ipv6 address, which is not supported by openPanel now
-	// cfip, err := getPublicIPWithCloudflare()
-	// if err == nil {
-	// 	return []net.IP{cfip}, true, nil
-	// }
-	// log.Error("Failed to get public IP from Cloudflare", zap.Error(err))
+	cfip, err := getPublicIPWithCloudflare()
+	if err == nil {
+		return []net.IP{cfip}, true, nil
+	}
+	log.Error("Failed to get public IP from Cloudflare", zap.Error(err))
 
 	ipifyip, err := getPublicIPWithIpify()
 	if err == nil {
@@ -70,7 +71,17 @@ func getPublicIPsFromLocal() (ips []net.IP, err error) {
 func getPublicIPWithCloudflare() (net.IP, error) {
 	const CloudflareTraceEndpoint = "https://dash.cloudflare.com/cdn-cgi/trace"
 
-	resp, err := http.Get(CloudflareTraceEndpoint)
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DisableKeepAlives = true
+	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, "tcp4", addr)
+	}
+	client := &http.Client{
+		Transport: transport,
+		Timeout:   5 * time.Second,
+	}
+
+	resp, err := client.Get(CloudflareTraceEndpoint)
 	if err != nil {
 		return nil, err
 	}
