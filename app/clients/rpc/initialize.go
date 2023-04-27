@@ -10,19 +10,20 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/openPanel/core/app/generated/pb"
+	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/router"
-	"github.com/openPanel/core/app/tools/rpc"
+	"github.com/openPanel/core/app/tools/rpcDialer"
 	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
-// TryUpdateRouterNodeAndInfo A node that is not starting for the first time tries to
+// TryUpdateRouterNode A node that is not starting for the first time tries to
 // load the current cluster information from one of its neighbors
-func TryUpdateRouterNodeAndInfo(targets []Target) ([]netip.AddrPort, error) {
+func TryUpdateRouterNode(targets []Target) ([]netip.AddrPort, error) {
 	var addrs []netip.AddrPort
 	action := func(attempt uint) error {
 		currentTarget := targets[attempt]
-		conn, err := rpc.DialWithAddress(currentTarget.AddrPort.String(), currentTarget.ServerId)
+		conn, err := rpcDialer.DialWithAddress(currentTarget.AddrPort.String(), currentTarget.ServerId)
 		if err != nil {
 			log.Infof("failed to connect to %s: %s", currentTarget.AddrPort.String(), err)
 			return err
@@ -32,39 +33,36 @@ func TryUpdateRouterNodeAndInfo(targets []Target) ([]netip.AddrPort, error) {
 		}(conn)
 
 		client := pb.NewInitializeServiceClient(conn)
-		info, err := client.GetNodesInfo(context.Background(), &emptypb.Empty{})
+		info, err := client.GetClusterInfo(context.Background(), &emptypb.Empty{})
 		if err != nil {
 			return err
 		}
 
-		var cache = make([]router.Node, 0, len(info.Nodes))
+		routerNodes := make([]router.Node, 0, len(info.Nodes)+1)
+		routerNodes = append(routerNodes, router.Node{
+			Id:       global.App.NodeInfo.ServerId,
+			AddrPort: netUtils.NewAddrPortWithIP(global.App.NodeInfo.ServerPublicIP, global.App.NodeInfo.ServerPort),
+		})
 		for _, node := range info.Nodes {
-			cache = append(cache, router.Node{
+			routerNodes = append(routerNodes, router.Node{
 				Id:       node.Id,
-				AddrPort: netUtils.NewAddPortWithString(node.Ip, int(node.Port)),
+				AddrPort: netUtils.NewAddrPortWithString(node.Ip, int(node.Port)),
 			})
 		}
 
-		router.SetNodes(cache)
-
-		routerInfo := map[router.Edge]int{}
-		for _, ls := range info.LinkStates {
-			routerInfo[router.Edge{
-				From: ls.From,
-				To:   ls.To,
-			}] = int(ls.Latency)
-		}
-		router.UpdateRouterInfo(routerInfo)
+		router.SetNodes(routerNodes)
 
 		addrs = make([]netip.AddrPort, len(info.Nodes))
 		for i, node := range info.Nodes {
-			addrs[i] = netUtils.NewAddPortWithString(node.Ip, int(node.Port))
+			addrs[i] = netUtils.NewAddrPortWithString(node.Ip, int(node.Port))
 		}
+
+		// Test latency
 
 		return nil
 	}
 
-	err := retry.Retry(action, strategy.Limit(uint(len(targets))-1))
+	err := retry.Retry(action, strategy.Limit(uint(len(targets))))
 	if err != nil {
 		return nil, err
 	}

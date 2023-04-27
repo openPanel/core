@@ -15,15 +15,18 @@ type Edge struct {
 	To   string
 }
 
+type LinkStates = map[Edge]int
+
 // RouterInfo The map store the latency between two nodes
-var routerInfos = map[Edge]int{}
-var riLock = sync.RWMutex{}
+var linkStates = LinkStates{}
+var lsLock = sync.RWMutex{}
 
-var nodes = map[string]Node{}
-var nodesLock = sync.RWMutex{}
+// nodes The map store the nodes info
+var nodes = map[string]netip.AddrPort{}
+var ndLock = sync.RWMutex{}
 
-// RouterDecision The map store the decision of the router, value define the next hop
-var routerDecision = make(map[string]netip.AddrPort)
+// RouterDecisions The map store the decision of the router, value define the next hop
+var routerDecisions = make(map[string]netip.AddrPort)
 var rdLock = sync.RWMutex{}
 
 type Node struct {
@@ -36,17 +39,20 @@ var NodePersistence func([]Node)
 
 func flattenNodes() []Node {
 	flat := make([]Node, 0, len(nodes))
-	for _, node := range nodes {
-		flat = append(flat, node)
+	for id, addr := range nodes {
+		flat = append(flat, Node{
+			Id:       id,
+			AddrPort: addr,
+		})
 	}
 	return flat
 }
 
 func AddNodes(ns []Node) {
-	nodesLock.Lock()
-	defer nodesLock.Unlock()
+	ndLock.Lock()
+	defer ndLock.Unlock()
 	for _, node := range ns {
-		nodes[node.Id] = node
+		nodes[node.Id] = node.AddrPort
 	}
 
 	if NodePersistence != nil {
@@ -55,11 +61,11 @@ func AddNodes(ns []Node) {
 }
 
 func SetNodes(ns []Node) {
-	nodesLock.Lock()
-	defer nodesLock.Unlock()
-	nodes = make(map[string]Node)
+	ndLock.Lock()
+	defer ndLock.Unlock()
+	nodes = make(map[string]netip.AddrPort, len(ns))
 	for _, node := range ns {
-		nodes[node.Id] = node
+		nodes[node.Id] = node.AddrPort
 	}
 
 	if NodePersistence != nil {
@@ -70,8 +76,8 @@ func SetNodes(ns []Node) {
 }
 
 func DeleteNode(id string) {
-	nodesLock.Lock()
-	defer nodesLock.Unlock()
+	ndLock.Lock()
+	defer ndLock.Unlock()
 	delete(nodes, id)
 
 	if NodePersistence != nil {
@@ -82,75 +88,69 @@ func DeleteNode(id string) {
 }
 
 func UpdateNode(id string, ip net.IP, port int) {
-	nodesLock.Lock()
-	defer nodesLock.Unlock()
-	nodes[id] = Node{
-		Id:       id,
-		AddrPort: netUtils.NewAddrPortWithIP(ip, port),
-	}
+	ndLock.Lock()
+	defer ndLock.Unlock()
+	nodes[id] = netUtils.NewAddrPortWithIP(ip, port)
 
 	filterRouterInfos(id)
 }
 
 // Invalid all outdated router info
+// Delete all router info that related to the node which id is given
 func filterRouterInfos(id string) {
-	riLock.Lock()
-	defer riLock.Unlock()
+	lsLock.Lock()
+	defer lsLock.Unlock()
 
 	// we assume nodes has already been locked
 	nodeMap := make(map[string]bool)
-	for _, node := range nodes {
-		nodeMap[node.Id] = true
+	for nodeId := range nodes {
+		nodeMap[nodeId] = true
 	}
 
-	if len(routerInfos) == 0 {
+	if len(linkStates) == 0 {
 		return
 	}
 
-	for link := range routerInfos {
+	for link := range linkStates {
 		if link.From == id || link.To == id {
-			delete(routerInfos, link)
+			delete(linkStates, link)
 		}
 		// remove no exist router info
 		if !nodeMap[link.From] || !nodeMap[link.To] {
-			delete(routerInfos, link)
+			delete(linkStates, link)
 		}
 	}
 }
 
-func UpdateRouterInfo(infos map[Edge]int) {
-	riLock.Lock()
+func UpdateLinkStates(infos LinkStates) {
+	lsLock.Lock()
 
 	for link, latency := range infos {
-		routerInfos[link] = latency
+		linkStates[link] = latency
 	}
 
-	riLock.Unlock()
+	lsLock.Unlock()
 
 	updateRouterDecision()
 }
 
-func GetRouterInfo() map[Edge]int {
-	riLock.RLock()
-	defer riLock.RUnlock()
-	return routerInfos
+func GetLinkStates() LinkStates {
+	lsLock.RLock()
+	defer lsLock.RUnlock()
+	return linkStates
 }
 
 func updateRouterDecision() {
 	rdLock.Lock()
 	defer rdLock.Unlock()
-	riLock.RLock()
-	defer riLock.RUnlock()
-	nodesLock.RLock()
-	defer nodesLock.RUnlock()
+	lsLock.RLock()
+	defer lsLock.RUnlock()
+	ndLock.RLock()
+	defer ndLock.RUnlock()
 
 	var nodeIds = make(map[string]bool)
-	for edge := range routerInfos {
+	for edge := range linkStates {
 		nodeIds[edge.From] = true
-	}
-
-	if len(nodeIds) <= 2 {
-		return
 	}
 
 	if len(nodeIds) < len(nodes) {
@@ -164,7 +164,7 @@ func updateRouterDecision() {
 func GetHop(id string) (netip.AddrPort, error) {
 	rdLock.RLock()
 	defer rdLock.RUnlock()
-	addr, ok := routerDecision[id]
+	addr, ok := routerDecisions[id]
 	if !ok {
 		return netip.AddrPort{}, errors.New("no route to host")
 	}

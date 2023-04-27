@@ -25,7 +25,7 @@ func dijkstraRouteAlgorithm() {
 
 	for Q.Len() > 0 {
 		u := heap.Pop(&Q).(*pqNode)
-		for edge, latency := range routerInfos {
+		for edge, latency := range linkStates {
 			if edge.From != u.id {
 				continue
 			}
@@ -49,14 +49,14 @@ func dijkstraRouteAlgorithm() {
 		return path
 	}
 
-	for _, node := range nodes {
-		if node.Id == global.App.NodeInfo.ServerId {
+	for id := range nodes {
+		if id == global.App.NodeInfo.ServerId {
 			continue
 		}
-		path := calPath(node.Id)
+		path := calPath(id)
 		if len(path) < 2 {
-			log.Warnf("No path to node %s", node.Id)
+			log.Warnf("No path to node %s", id)
 		}
-		routerDecision[node.Id] = nodes[path[1]].AddrPort
+		routerDecisions[id] = nodes[path[1]]
 	}
 }

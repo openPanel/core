@@ -9,16 +9,18 @@ import (
 	"github.com/openPanel/core/app/clients/rpc"
 	"github.com/openPanel/core/app/config"
 	"github.com/openPanel/core/app/db/repo/shared"
+	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/cron"
+	"github.com/openPanel/core/app/manager/router"
 	"github.com/openPanel/core/app/services"
 	"github.com/openPanel/core/app/tools/security"
 	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
-// Start the first node of a cluster
-func Start(listenIp net.IP, listenPort int) {
+// Create the first node of a cluster
+func Create(listenIp net.IP, listenPort int) {
 	requireFirstStartUp()
 	commonInit()
 
@@ -26,13 +28,13 @@ func Start(listenIp net.IP, listenPort int) {
 
 	caCert, caKey, err := security.GenerateCACertificate()
 	if err != nil {
-		log.Fatalf("Failed to generate CA certificate: %v", err)
+		log.Panicf("Failed to generate CA certificate: %v", err)
 	}
 	log.Info("CA certificate generated")
 
 	localServerCert, err := security.SignCsr(caCert, caKey, meta.csr)
 	if err != nil {
-		log.Fatalf("Failed to sign local certificate: %v", err)
+		log.Panicf("Failed to sign local certificate: %v", err)
 	}
 	log.Info("Local certificate signed")
 
@@ -49,7 +51,7 @@ func Start(listenIp net.IP, listenPort int) {
 
 	err = config.SaveLocalNodeInfo(node)
 	if err != nil {
-		log.Fatalf("Failed to save node info: %v", err)
+		log.Panicf("Failed to save node info: %v", err)
 	}
 	log.Infof("Node info saved")
 
@@ -66,7 +68,7 @@ func Start(listenIp net.IP, listenPort int) {
 
 	err = config.SaveClusterInfo(global.App.ClusterInfo)
 	if err != nil {
-		log.Fatalf("Failed to save cluster info: %v", err)
+		log.Panicf("Failed to save cluster info: %v", err)
 	}
 	err = shared.NodeRepo.AddNode(context.Background(),
 		global.App.NodeInfo.ServerId,
@@ -74,7 +76,7 @@ func Start(listenIp net.IP, listenPort int) {
 		global.App.NodeInfo.ServerPort,
 	)
 	if err != nil {
-		log.Fatalf("Failed to add node to database: %v", err)
+		log.Panicf("Failed to add node to database: %v", err)
 		return
 	}
 
@@ -87,26 +89,67 @@ func Start(listenIp net.IP, listenPort int) {
 	// store a cluster scoped token
 	err = createToken()
 	if err != nil {
-		log.Fatalf("Failed to create token: %v", err)
+		log.Panicf("Failed to create token: %v", err)
 	}
 
 	lateInit()
 
-	clean.WaitClean()
+	clean.RunEndless()
 }
 
 // Join a cluster
 func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 	requireFirstStartUp()
-
 	commonInit()
+
+	initialized := false
+	defer func() {
+		if !initialized {
+			err := cleanData()
+			if err != nil {
+				panic(err)
+			}
+		}
+	}()
 
 	meta := generateNewNodeMeta(listenIp, listenPort)
 	target := netUtils.NewAddrPortWithIP(ip, port)
 
-	registerInfo, err := http.GetInitialInfo(target, meta.serverPublicIp, meta.serverPort, token, meta.csr, meta.serverId)
+	// contains known node in the cluster
+	initialInfo, err := http.GetClusterInfo(target, token)
 	if err != nil {
-		log.Fatalf("Failed to get initial info: %v", err)
+		log.Errorf("Failed to get initial info: %v", err)
+		return
+	}
+
+	routerNodes := loadAndSaveInitialNodes(initialInfo.Nodes, router.Node{
+		Id:       meta.serverId,
+		AddrPort: netUtils.NewAddrPortWithIP(meta.serverPublicIp, meta.serverPort),
+	})
+
+	// no need to test latency with itself
+	linkStates := router.EstimateLatencies(routerNodes[1:])
+	log.Infof("Latencies estimated")
+
+	pbLinkStates := make([]*pb.LinkState, len(linkStates))
+	for edge, latency := range linkStates {
+		pbLinkStates = append(pbLinkStates, &pb.LinkState{
+			From:    edge.From,
+			To:      edge.To,
+			Latency: int32(latency),
+		})
+	}
+
+	registerInfo, err := http.RegisterNewNode(
+		target,
+		meta.serverPublicIp,
+		meta.serverPort,
+		token,
+		meta.csr,
+		meta.serverId,
+		pbLinkStates)
+	if err != nil {
+		log.Panicf("Failed to register: %v", err)
 	}
 
 	node := global.NodeInfo{
@@ -121,16 +164,16 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 	}
 	err = config.SaveLocalNodeInfo(node)
 	if err != nil {
-		log.Fatalf("Failed to save node info: %v", err)
+		log.Panicf("Failed to save node info: %v", err)
 	}
 	global.App.NodeInfo = node
 
-	createFullNetGraphAtJoin(registerInfo)
+	loadLinkStates(registerInfo.LinkStates)
 
-	global.App.DbShared = joinDqlite(registerInfo)
+	global.App.DbShared = joinDqlite(routerNodes[1:])
 	global.App.ClusterInfo, err = config.LoadClusterInfo()
 	if err != nil {
-		log.Fatalf("Failed to load cluster info: %v", err)
+		log.Panicf("Failed to load cluster info: %v", err)
 	}
 
 	go services.StartRpcServiceBlocking()
@@ -141,7 +184,8 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 
 	lateInit()
 
-	clean.WaitClean()
+	initialized = true
+	clean.RunEndless()
 }
 
 // Resume resume a node to cluster
@@ -154,29 +198,34 @@ func Resume() {
 
 	global.App.NodeInfo, err = config.LoadLocalNodeInfo()
 	if err != nil {
-		log.Fatalf("Failed to load node info: %v", err)
+		log.Panicf("Failed to load node info: %v", err)
 	}
 
 	// Check if the current node was the only node in the cluster
 	// the last time it exited the cluster.
 	// If not, should try to get the current cluster status from one of the neighbors,
 	// otherwise start a single node.
-	cache, err := config.LoadNodesCache()
+	cacheNodes, err := config.LoadNodesCache()
 	if err != nil {
-		log.Fatalf("Failed to load nodes cache: %v", err)
+		log.Panicf("Failed to load nodes cache: %v", err)
 	}
-	if len(cache) > 0 {
-		targets := make([]rpc.Target, len(cache))
-		for i, node := range cache {
-			targets[i] = rpc.Target{
+
+	// There exists other nodes in the cluster when the node exited last time.
+	if len(cacheNodes) > 1 {
+		targets := make([]rpc.Target, 0, len(cacheNodes)-1)
+		for _, node := range cacheNodes {
+			if node.Id == global.App.NodeInfo.ServerId {
+				continue
+			}
+			targets = append(targets, rpc.Target{
 				ServerId: node.Id,
 				AddrPort: node.AddrPort,
-			}
+			})
 		}
 
-		addrs, err := rpc.TryUpdateRouterNodeAndInfo(targets)
+		addrs, err := rpc.TryUpdateRouterNode(targets)
 		if err != nil {
-			log.Fatalf("Failed to update router info: %v", err)
+			log.Panicf("Failed to update router info: %v", err)
 		}
 
 		global.App.DbShared = resumeDqlite(addrs)
@@ -186,7 +235,7 @@ func Resume() {
 
 	global.App.ClusterInfo, err = config.LoadClusterInfo()
 	if err != nil {
-		log.Fatalf("Failed to load cluster info: %v", err)
+		log.Panicf("Failed to load cluster info: %v", err)
 	}
 
 	go services.StartRpcServiceBlocking()
@@ -197,7 +246,7 @@ func Resume() {
 
 	lateInit()
 
-	clean.WaitClean()
+	clean.RunEndless()
 }
 
 func commonInit() {

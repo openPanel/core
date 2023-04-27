@@ -32,7 +32,7 @@ func generateNewNodeMeta(ip net.IP, port int) newNodeMeta {
 		var serverIps []net.IP
 		serverIps, indirect, err = netUtils.GetPublicIP()
 		if err != nil {
-			log.Fatalf("Failed to get public IP: %v", err)
+			log.Panicf("Failed to get public IP: %v", err)
 		}
 
 		if len(serverIps) > 1 {
@@ -48,7 +48,7 @@ func generateNewNodeMeta(ip net.IP, port int) newNodeMeta {
 
 	signingCsr, privateKey, err := security.GenerateCertificateSigningRequest(serverId)
 	if err != nil {
-		log.Fatalf("Failed to generate certificate signing request: %v", err)
+		log.Panicf("Failed to generate certificate signing request: %v", err)
 	}
 
 	return newNodeMeta{

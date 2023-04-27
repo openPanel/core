@@ -20,26 +20,33 @@ func createEmptyNetGraph() {
 	router.AddNodes(nodes)
 }
 
-func createFullNetGraphAtJoin(resp *pb.RegisterResponse) {
-	nodes := make([]router.Node, len(resp.Nodes))
-	for i, node := range resp.Nodes {
-		nodes[i] = router.Node{
+// loadAndSaveInitialNodes return a list of nodes, current node at index 0
+func loadAndSaveInitialNodes(nodes []*pb.Node, self router.Node) []router.Node {
+	routerNodes := make([]router.Node, len(nodes)+1)
+	routerNodes[0] = self
+	for i, node := range nodes {
+		routerNodes[i+1] = router.Node{
 			Id:       node.Id,
-			AddrPort: netUtils.NewAddPortWithString(node.Ip, int(node.Port)),
+			AddrPort: netUtils.NewAddrPortWithString(node.Ip, int(node.Port)),
 		}
 	}
 
-	router.AddNodes(nodes)
+	router.SetNodes(routerNodes)
+
+	return routerNodes
+}
+
+func loadLinkStates(lst []*pb.LinkState) {
 
 	edges := make(map[router.Edge]int)
-	for _, edge := range resp.LinkStates {
+	for _, state := range lst {
 		edges[router.Edge{
-			From: edge.From,
-			To:   edge.To,
-		}] = int(edge.Latency)
+			From: state.From,
+			To:   state.To,
+		}] = int(state.Latency)
 	}
 
-	router.UpdateRouterInfo(edges)
+	router.UpdateLinkStates(edges)
 
 	router.EstimateAndStoreLatencies()
 }

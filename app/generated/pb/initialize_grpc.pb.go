@@ -20,16 +20,22 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	InitializeService_Register_FullMethodName     = "/openPanel.InitializeService/Register"
-	InitializeService_GetNodesInfo_FullMethodName = "/openPanel.InitializeService/GetNodesInfo"
+	InitializeService_EstimateLatency_FullMethodName = "/openPanel.InitializeService/EstimateLatency"
+	InitializeService_UpdateLinkState_FullMethodName = "/openPanel.InitializeService/UpdateLinkState"
+	InitializeService_Register_FullMethodName        = "/openPanel.InitializeService/Register"
+	InitializeService_GetClusterInfo_FullMethodName  = "/openPanel.InitializeService/GetClusterInfo"
 )
 
 // InitializeServiceClient is the client API for InitializeService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InitializeServiceClient interface {
+	// request target node to estimate the latency between the target node and the payload node
+	EstimateLatency(ctx context.Context, in *EstimateLatencyRequest, opts ...grpc.CallOption) (*EstimateLatencyResponse, error)
+	// request target node to update its link states, and return the updated link states
+	UpdateLinkState(ctx context.Context, in *UpdateLinkStateRequest, opts ...grpc.CallOption) (*UpdateLinkStateResponse, error)
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
-	GetNodesInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetNodesInfoResponse, error)
+	GetClusterInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetClusterInfoResponse, error)
 }
 
 type initializeServiceClient struct {
@@ -38,6 +44,24 @@ type initializeServiceClient struct {
 
 func NewInitializeServiceClient(cc grpc.ClientConnInterface) InitializeServiceClient {
 	return &initializeServiceClient{cc}
+}
+
+func (c *initializeServiceClient) EstimateLatency(ctx context.Context, in *EstimateLatencyRequest, opts ...grpc.CallOption) (*EstimateLatencyResponse, error) {
+	out := new(EstimateLatencyResponse)
+	err := c.cc.Invoke(ctx, InitializeService_EstimateLatency_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *initializeServiceClient) UpdateLinkState(ctx context.Context, in *UpdateLinkStateRequest, opts ...grpc.CallOption) (*UpdateLinkStateResponse, error) {
+	out := new(UpdateLinkStateResponse)
+	err := c.cc.Invoke(ctx, InitializeService_UpdateLinkState_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *initializeServiceClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
@@ -49,9 +73,9 @@ func (c *initializeServiceClient) Register(ctx context.Context, in *RegisterRequ
 	return out, nil
 }
 
-func (c *initializeServiceClient) GetNodesInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetNodesInfoResponse, error) {
-	out := new(GetNodesInfoResponse)
-	err := c.cc.Invoke(ctx, InitializeService_GetNodesInfo_FullMethodName, in, out, opts...)
+func (c *initializeServiceClient) GetClusterInfo(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetClusterInfoResponse, error) {
+	out := new(GetClusterInfoResponse)
+	err := c.cc.Invoke(ctx, InitializeService_GetClusterInfo_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,19 +86,29 @@ func (c *initializeServiceClient) GetNodesInfo(ctx context.Context, in *emptypb.
 // All implementations should embed UnimplementedInitializeServiceServer
 // for forward compatibility
 type InitializeServiceServer interface {
+	// request target node to estimate the latency between the target node and the payload node
+	EstimateLatency(context.Context, *EstimateLatencyRequest) (*EstimateLatencyResponse, error)
+	// request target node to update its link states, and return the updated link states
+	UpdateLinkState(context.Context, *UpdateLinkStateRequest) (*UpdateLinkStateResponse, error)
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
-	GetNodesInfo(context.Context, *emptypb.Empty) (*GetNodesInfoResponse, error)
+	GetClusterInfo(context.Context, *emptypb.Empty) (*GetClusterInfoResponse, error)
 }
 
 // UnimplementedInitializeServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedInitializeServiceServer struct {
 }
 
+func (UnimplementedInitializeServiceServer) EstimateLatency(context.Context, *EstimateLatencyRequest) (*EstimateLatencyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EstimateLatency not implemented")
+}
+func (UnimplementedInitializeServiceServer) UpdateLinkState(context.Context, *UpdateLinkStateRequest) (*UpdateLinkStateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateLinkState not implemented")
+}
 func (UnimplementedInitializeServiceServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
-func (UnimplementedInitializeServiceServer) GetNodesInfo(context.Context, *emptypb.Empty) (*GetNodesInfoResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetNodesInfo not implemented")
+func (UnimplementedInitializeServiceServer) GetClusterInfo(context.Context, *emptypb.Empty) (*GetClusterInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClusterInfo not implemented")
 }
 
 // UnsafeInitializeServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -86,6 +120,42 @@ type UnsafeInitializeServiceServer interface {
 
 func RegisterInitializeServiceServer(s grpc.ServiceRegistrar, srv InitializeServiceServer) {
 	s.RegisterService(&InitializeService_ServiceDesc, srv)
+}
+
+func _InitializeService_EstimateLatency_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EstimateLatencyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InitializeServiceServer).EstimateLatency(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InitializeService_EstimateLatency_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InitializeServiceServer).EstimateLatency(ctx, req.(*EstimateLatencyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InitializeService_UpdateLinkState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateLinkStateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InitializeServiceServer).UpdateLinkState(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InitializeService_UpdateLinkState_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InitializeServiceServer).UpdateLinkState(ctx, req.(*UpdateLinkStateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _InitializeService_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -106,20 +176,20 @@ func _InitializeService_Register_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _InitializeService_GetNodesInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _InitializeService_GetClusterInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(InitializeServiceServer).GetNodesInfo(ctx, in)
+		return srv.(InitializeServiceServer).GetClusterInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: InitializeService_GetNodesInfo_FullMethodName,
+		FullMethod: InitializeService_GetClusterInfo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InitializeServiceServer).GetNodesInfo(ctx, req.(*emptypb.Empty))
+		return srv.(InitializeServiceServer).GetClusterInfo(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -132,12 +202,20 @@ var InitializeService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*InitializeServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "EstimateLatency",
+			Handler:    _InitializeService_EstimateLatency_Handler,
+		},
+		{
+			MethodName: "UpdateLinkState",
+			Handler:    _InitializeService_UpdateLinkState_Handler,
+		},
+		{
 			MethodName: "Register",
 			Handler:    _InitializeService_Register_Handler,
 		},
 		{
-			MethodName: "GetNodesInfo",
-			Handler:    _InitializeService_GetNodesInfo_Handler,
+			MethodName: "GetClusterInfo",
+			Handler:    _InitializeService_GetClusterInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

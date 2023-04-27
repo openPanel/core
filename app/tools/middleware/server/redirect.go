@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/openPanel/core/app/global"
-	"github.com/openPanel/core/app/tools/rpc"
+	"github.com/openPanel/core/app/tools/rpcDialer"
 )
 
 func serverRedirectUnaryInterceptor(
@@ -25,7 +25,7 @@ func serverRedirectUnaryInterceptor(
 		return handler(ctx, req)
 	}
 
-	conn, err := rpc.DialWithServerId(dst)
+	conn, err := rpcDialer.DialWithServerId(dst)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func serverRedirectStreamInterceptor(
 		return handler(srv, ss)
 	}
 
-	conn, err := rpc.DialWithServerId(dst)
+	conn, err := rpcDialer.DialWithServerId(dst)
 	if err != nil {
 		return err
 	}

@@ -6,15 +6,17 @@ import (
 	"net"
 
 	"github.com/quic-go/quic-go"
+
+	"github.com/openPanel/core/app/constant"
 )
 
 var _ net.Listener = (*Listener)(nil)
 
 type Listener struct {
-	ql quic.Listener
+	ql quic.EarlyListener
 }
 
-func Listen(ql quic.Listener) net.Listener {
+func Listen(ql quic.EarlyListener) net.Listener {
 	return &Listener{ql}
 }
 
@@ -43,11 +45,9 @@ func (l Listener) Addr() net.Addr {
 	return l.ql.Addr()
 }
 
-var config = &quic.Config{}
-
 func NewQuicDialer(tlsConf *tls.Config) func(context.Context, string) (net.Conn, error) {
 	return func(ctx context.Context, s string) (net.Conn, error) {
-		conn, err := quic.DialAddrEarlyContext(ctx, s, tlsConf, config)
+		conn, err := quic.DialAddrEarlyContext(ctx, s, tlsConf, constant.QuicConfig)
 		if err != nil {
 			return nil, err
 		}

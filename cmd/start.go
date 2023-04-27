@@ -12,28 +12,9 @@ import (
 var startLongHelp = `The start command is used to launch either a standalone application or the first node of a cluster.
 The will issue the Certificate Authority (CA) certificate and key, which will be used to sign all other certificates in the cluster.`
 
-//
-//var startCmd = &cobra.Command{
-//	Use:     "start",
-//	Short:   "Start a new panel instance",
-//	Long:    startLongHelp,
-//	PreRunE: preRunCheck,
-//	Run:     startAction,
-//}
-//
-//func startAction(cmd *cobra.Command, _ []string) {
-//	bootstrap.Start(*listenIp, *listenPort)
-//}
-//
-//func init() {
-//	rootCmd.AddCommand(startCmd)
-//
-//	attachAddress(startCmd)
-//}
-
 var startCmd = &cli.Command{
 	Name:  "start",
-	Usage: "Start a new panel instance",
+	Usage: "Create a new panel instance",
 	Flags: []cli.Flag{
 		&cli.GenericFlag{
 			Name:  "ip",
@@ -51,7 +32,7 @@ var startCmd = &cli.Command{
 		listenIP := context.Generic("ip").(*IP)
 		listenPort := context.Generic("port").(*Port)
 
-		bootstrap.Start(net.IP(*listenIP), int(*listenPort))
+		bootstrap.Create(net.IP(*listenIP), int(*listenPort))
 
 		return nil
 	},

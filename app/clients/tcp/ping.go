@@ -1,4 +1,4 @@
-package http
+package tcp
 
 import (
 	"net"
@@ -6,14 +6,14 @@ import (
 	"time"
 )
 
-func TcpPing(target netip.AddrPort) (int, error) {
+func Ping(target netip.AddrPort) (int, error) {
 	dialer := net.Dialer{
 		KeepAlive: -1,
 		Timeout:   5 * time.Second,
 	}
 
 	tcpStart := time.Now()
-	tcpConn, err := dialer.Dial("tcp", target.String())
+	tcpConn, err := dialer.Dial("tcp4", target.String())
 	if err != nil {
 		return 0, err
 	}

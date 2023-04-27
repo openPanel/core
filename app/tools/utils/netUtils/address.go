@@ -32,17 +32,17 @@ func CheckPublicIp(ip net.IP) error {
 func AssertPublicAddress(address string) (net.IP, int) {
 	parts := strings.Split(address, ":")
 	if len(parts) == 0 || len(parts) > 2 {
-		log.Println("Invalid address " + address)
+		log.Panic("Invalid address " + address)
 	}
 
 	ip := net.ParseIP(parts[0])
 	if ip == nil {
-		log.Fatal("Invalid IP address " + parts[0])
+		log.Panic("Invalid IP address " + parts[0])
 	}
 
 	err := CheckPublicIp(ip)
 	if err != nil {
-		log.Fatal(err)
+		log.Panicf("#%v", err)
 	}
 
 	var port int
@@ -51,11 +51,11 @@ func AssertPublicAddress(address string) (net.IP, int) {
 		port, err = strconv.Atoi(parts[1])
 
 		if err != nil {
-			panic("Invalid port " + parts[1])
+			log.Panic("Invalid port " + parts[1])
 		}
 
 		if port < 1 || port > 65535 {
-			panic("Invalid port " + parts[1])
+			log.Panic("Invalid port " + parts[1])
 		}
 	} else {
 		port = constant.DefaultListenPort

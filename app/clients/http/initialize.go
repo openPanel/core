@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net"
 	"net/netip"
 
@@ -12,25 +13,56 @@ import (
 	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
-func GetInitialInfo(target netip.AddrPort, nodeIp net.IP, nodePort int, token string, csr []byte, serverId string) (*pb.RegisterResponse, error) {
+func getAuthedRequest(token string, serverId string) *resty.Request {
+	client := netUtils.GetInsecureHttpClient()
+	r := resty.NewWithClient(client).R()
+	r.SetHeader(constant.HttpContentTypeHeader, constant.ContentTypeJson)
+	r.SetHeader(constant.HttpAuthorizationTokenHeader, token)
+	if serverId != "" {
+		r.SetHeader(constant.RPCSourceMetadataKey, serverId)
+	}
+	return r
+}
+
+func GetClusterInfo(target netip.AddrPort, token string) (*pb.GetClusterInfoResponse, error) {
+	var response = &pb.GetClusterInfoResponse{}
+
+	resp, err := getAuthedRequest(token, "").
+		SetResult(response).
+		Get(fmt.Sprintf("https://%s/initialize", target.String()))
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode() != 200 {
+		return nil, errors.New("failed to get cluster info: " + resp.String())
+	}
+
+	response = resp.Result().(*pb.GetClusterInfoResponse)
+	return response, nil
+}
+
+func RegisterNewNode(
+	target netip.AddrPort,
+	nodeIp net.IP,
+	nodePort int,
+	token string,
+	csr []byte,
+	serverId string,
+	linkStates []*pb.LinkState) (*pb.RegisterResponse, error) {
 	request := &pb.RegisterRequest{
-		Ip:       nodeIp.String(),
-		Port:     int32(nodePort),
-		Token:    token,
-		ServerID: serverId,
-		Csr:      csr,
+		Ip:         nodeIp.String(),
+		Port:       int32(nodePort),
+		ServerID:   serverId,
+		Csr:        csr,
+		LinkStates: linkStates,
 	}
 	var response = &pb.RegisterResponse{}
 
-	client := netUtils.GetInsecureHttpClient()
-	r := resty.NewWithClient(client)
-
-	resp, err := r.R().
-		SetHeader("Content-Type", "application/json").
-		SetHeader(constant.RPCSourceMetadataKey, serverId).
+	resp, err := getAuthedRequest(token, serverId).
 		SetBody(request).
 		SetResult(response).
-		Post("https://" + target.String() + "/initialize")
+		Post(fmt.Sprintf("https://%s/initialize", target.String()))
 	if err != nil {
 		return nil, err
 	}

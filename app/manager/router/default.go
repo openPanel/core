@@ -13,13 +13,13 @@ import (
 // For unreachable node, it will use the lowest latency node to connect to it
 // This algorithm will be used before received all node link state.
 func defaultRouteAlgorithm() {
-	if routerInfos == nil || len(routerInfos) == 0 {
-		log.Warnf("routerInfos is empty, can not generate router decisions")
+	if linkStates == nil || len(linkStates) == 0 {
+		log.Warnf("linkStates is empty, can not generate router decisions")
 		return
 	}
 
 	// reset router decision
-	routerDecision = map[string]netip.AddrPort{}
+	routerDecisions = map[string]netip.AddrPort{}
 
 	// find the lowest latency node
 	var lowestLatencyNode string
@@ -28,7 +28,7 @@ func defaultRouteAlgorithm() {
 	var reachableNodes = map[string]int{}
 
 	// find all reachable node
-	for edge, latency := range routerInfos {
+	for edge, latency := range linkStates {
 		if edge.From != global.App.NodeInfo.ServerId {
 			continue
 		}
@@ -46,9 +46,9 @@ func defaultRouteAlgorithm() {
 			continue
 		}
 		if _, ok := reachableNodes[id]; ok {
-			routerDecision[id] = node.AddrPort
+			routerDecisions[id] = node
 		} else {
-			routerDecision[id] = nodes[lowestLatencyNode].AddrPort
+			routerDecisions[id] = nodes[lowestLatencyNode]
 		}
 	}
 }

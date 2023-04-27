@@ -20,23 +20,23 @@ import (
 func getInitLocalDatabase() *local.Client {
 	dir, err := fileUtils.RequireDataDir("")
 	if err != nil {
-		log.Fatalf("Failed to create local database directory: %s", err)
+		log.Panicf("Failed to create local database directory: %s", err)
 	}
 
 	path, err := filepath.Abs(dir + string(os.PathSeparator) + constant.DefaultLocalSqliteFilename)
 	if err != nil {
-		log.Fatalf("Failed to get absolute path of local database file: %s", err)
+		log.Panicf("Failed to get absolute path of local database file: %s", err)
 	}
 
 	DSN := fmt.Sprintf("file:%s?cache=shared&mode=rwc&_journal_mode=WAL&_fk=1&_timeout=5000", path)
 
 	client, err := local.Open(dialect.SQLite, DSN)
 	if err != nil {
-		log.Fatalf("Failed to open local database: %s", err)
+		log.Panicf("Failed to open local database: %s", err)
 	}
 
 	if err = client.Schema.Create(context.Background()); err != nil {
-		log.Fatalf("Failed to create local database schema: %s", err)
+		log.Panicf("Failed to create local database schema: %s", err)
 	}
 
 	log.Infof("Local database initialized at %s", path)

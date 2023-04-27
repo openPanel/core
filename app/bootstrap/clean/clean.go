@@ -20,7 +20,7 @@ func RegisterCleanup(cleanup func()) {
 	cleanups = append(cleanups, cleanup)
 }
 
-func WaitClean() {
+func RunEndless() {
 	ch := make(chan os.Signal, 32)
 
 	signal.Notify(ch, unix.SIGPWR, unix.SIGINT, unix.SIGQUIT, unix.SIGTERM)
@@ -35,7 +35,7 @@ func WaitClean() {
 
 	go func() {
 		time.Sleep(15 * time.Second)
-		log.Fatalf("Timed out while cleaning up, exiting")
+		log.Panicf("Timed out while cleaning up, exiting")
 	}()
 
 	log.Infof("Received signal %s, cleaning up", sig.String())

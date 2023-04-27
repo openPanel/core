@@ -6,7 +6,7 @@ import (
 
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global"
-	"github.com/openPanel/core/app/tools/rpc"
+	"github.com/openPanel/core/app/tools/rpcDialer"
 )
 
 func DialFunction(ctx context.Context, address string) (net.Conn, error) {
@@ -16,7 +16,7 @@ func DialFunction(ctx context.Context, address string) (net.Conn, error) {
 		return server, nil
 	}
 
-	conn, err := rpc.DialWithServerId(address)
+	conn, err := rpcDialer.DialWithServerId(address)
 	if err != nil {
 		return nil, err
 	}

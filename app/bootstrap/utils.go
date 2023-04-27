@@ -38,6 +38,15 @@ func requireNonFirstStartUp() {
 	}
 }
 
+func cleanData() error {
+	// delete everything in data dir if init failed
+	err := os.RemoveAll(constant.DefaultDataDir)
+	if err != nil {
+		slog.Fatalf("Failed to clean data dir: %v", err)
+	}
+	slog.Println("Initialization failed, data dir cleaned")
+}
+
 func increaseUDPBufferSize() {
 	v, err := sysctl.Get(constant.SysctlUdpBufferSizeKey)
 	if err != nil {
@@ -45,7 +54,7 @@ func increaseUDPBufferSize() {
 	}
 	vNum, err := strconv.Atoi(v)
 	if vNum < constant.SysctlUdpBufferSizeValue {
-		err := sysctl.Set(constant.SysctlUdpBufferSizeKey, strconv.Itoa(constant.SysctlUdpBufferSizeValue))
+		err = sysctl.Set(constant.SysctlUdpBufferSizeKey, strconv.Itoa(constant.SysctlUdpBufferSizeValue))
 		if err != nil {
 			log.Fatalf("Failed to increase udp buffer: %v", err)
 		}

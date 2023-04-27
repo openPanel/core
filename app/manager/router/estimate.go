@@ -1,47 +1,56 @@
 package router
 
 import (
+	"net/netip"
 	"sync"
 
-	"github.com/openPanel/core/app/clients/http"
+	"github.com/openPanel/core/app/clients/tcp"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 )
 
-func EstimateAndStoreLatencies() map[Edge]int {
-	nodesLock.RLock()
-
+func EstimateLatencies(nodes []Node) map[Edge]int {
 	wg := sync.WaitGroup{}
 	infos := map[Edge]int{}
 
 	for _, node := range nodes {
-		if node.Id == global.App.NodeInfo.ServerId {
-			continue
-		}
-
 		wg.Add(1)
-		go func(node Node) {
+		go func(id string, addr netip.AddrPort) {
 			defer wg.Done()
 
-			latency, err := http.TcpPing(node.AddrPort)
+			latency, err := tcp.Ping(addr)
 			if err != nil {
-				log.Debugf("failed to ping node %s: %v", node.AddrPort.String(), err)
+				log.Debugf("failed to ping node %s: %v", addr.String(), err)
 				return
 			}
 
 			infos[Edge{
 				From: global.App.NodeInfo.ServerId,
-				To:   node.Id,
+				To:   id,
 			}] = latency
-		}(node)
+		}(node.Id, node.AddrPort)
 	}
 
 	wg.Wait()
 	log.Debugf("estimated latencies: %v", infos)
 
-	nodesLock.RUnlock()
+	return infos
+}
 
-	UpdateRouterInfo(infos)
+// EstimateAndStoreLatencies Estimate the latency between nodes and store it in the router info
+func EstimateAndStoreLatencies() map[Edge]int {
+	newNodes := make([]Node, 0, len(nodes) - 1)
+	ndLock.RLock()
+	for _, node := range flattenNodes() {
+		if node.Id != global.App.NodeInfo.ServerId {
+			newNodes = append(newNodes, node)
+		}
+	}
+	ndLock.RUnlock()
+
+	infos := EstimateLatencies(newNodes)
+
+	UpdateLinkStates(infos)
 
 	return infos
 }

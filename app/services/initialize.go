@@ -2,14 +2,10 @@ package services
 
 import (
 	"context"
-	"sync"
 
-	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/openPanel/core/app/clients/rpc"
-	"github.com/openPanel/core/app/config"
-	"github.com/openPanel/core/app/constant"
 	. "github.com/openPanel/core/app/db/repo/shared"
 	"github.com/openPanel/core/app/generated/db/shared"
 	"github.com/openPanel/core/app/generated/pb"
@@ -24,16 +20,22 @@ var InitializeService pb.InitializeServiceServer = new(initializeService)
 
 type initializeService struct{}
 
-func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRequest) (*pb.RegisterResponse, error) {
-	var authedToken string
-	err := config.Load(constant.ConfigKeyAuthorizationToken, &authedToken, constant.SharedStore)
-	if err != nil {
-		return nil, err
-	}
-	if authedToken != request.Token {
-		return nil, errors.New("invalid token")
-	}
+func (s *initializeService) UpdateLinkState(ctx context.Context, request *pb.UpdateLinkStateRequest) (*pb.UpdateLinkStateResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
 
+func (s *initializeService) EstimateLatency(ctx context.Context, request *pb.EstimateLatencyRequest) (*pb.EstimateLatencyResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *initializeService) GetClusterInfo(ctx context.Context, empty *emptypb.Empty) (*pb.GetClusterInfoResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	clientCert, err := security.SignCsr(global.App.NodeInfo.ClusterCaCert, global.App.ClusterInfo.CaKey, request.Csr)
 	if err != nil {
 		return nil, err
@@ -57,39 +59,28 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 			Port: int64(node.Port),
 		}
 	}
+	go func() {
+		for _, node := range nodes {
+			go func(node *shared.Node) {
+				if node.ID == request.ServerID {
+					return
+				}
+				err := rpc.NotifyNodeUpdate(node.ID)
+				if err != nil {
+					log.Warnf("failed to notify node %s of update: %s", node.ID, err)
+				}
+			}(node)
+		}
+	}()
 
-	errs := make([]error, 0)
-	wg := sync.WaitGroup{}
-	wg.Add(len(nodes))
-	for _, node := range nodes {
-		go func(node *shared.Node) {
-			defer wg.Done()
-			if node.ID == request.ServerID {
-				return
-			}
-
-			err := rpc.NotifyNodeUpdate(node.ID)
-			if err != nil {
-				log.Warnf("failed to notify node %s of update: %s", node.ID, err)
-				errs = append(errs, err)
-			}
-		}(node)
-	}
-	wg.Wait()
-
-	// if more than half of nodes failed to notify, return error
-	if len(errs) > len(nodes)/2 {
-		log.Errorf("failed to notify more than half of nodes of update")
-	}
-
-	currentRouterInfos := router.GetRouterInfo()
+	currentRouterInfos := router.GetLinkStates()
 
 	// after this op router will fall back to default algorithm
 	// thus we should make new node broadcast its link state immediately, to resume to dijkstra soon
 	router.AddNodes([]router.Node{
 		{
 			Id:       request.ServerID,
-			AddrPort: netUtils.NewAddPortWithString(request.Ip, int(request.Port)),
+			AddrPort: netUtils.NewAddrPortWithString(request.Ip, int(request.Port)),
 		},
 	})
 
@@ -106,7 +97,6 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 	return &pb.RegisterResponse{
 		ClusterCACert: global.App.NodeInfo.ClusterCaCert,
 		ClientCert:    clientCert,
-		Nodes:         pbNodes,
 		LinkStates:    linkStates,
 	}, nil
 }
@@ -126,7 +116,7 @@ func (s *initializeService) GetNodesInfo(ctx context.Context, empty *emptypb.Emp
 		}
 	}
 
-	currentRouterInfos := router.GetRouterInfo()
+	currentRouterInfos := router.GetLinkStates()
 
 	linkStates := make([]*pb.LinkState, len(currentRouterInfos))
 	i := 0

@@ -86,7 +86,7 @@ func CreateSharedDatabase(serverAddr *[]string) *shared.Client {
 		var err error
 		sharedClient, err = createSharedDatabase(serverAddr)
 		if err != nil {
-			log.Fatalf("Failed to create shared database: %v", err)
+			log.Panicf("Failed to create shared database: %v", err)
 		}
 	})
 	return sharedClient

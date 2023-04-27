@@ -12,23 +12,46 @@ message RegisterRequest {
   string ip = 1;
   int32 port = 2;
   string serverID = 3;
-  string token = 4;
-  bytes csr = 5;
+  bytes csr = 4;
+  repeated LinkState linkStates = 5; // link states from new node to all known nodes
 }
 
 message RegisterResponse {
   bytes clientCert = 1;
   bytes clusterCACert = 2;
-  repeated entpb.Node nodes = 3;
-  repeated LinkState linkStates = 4;
+  repeated LinkState linkStates = 3; // link states of all known nodes, including the new node
 }
 
-message GetNodesInfoResponse {
+message UpdateLinkStateRequest {
+  // the link states from a resumed node
+  repeated LinkState linkStates = 3;
+}
+
+message UpdateLinkStateResponse {
+  // the link states of all known nodes, including the resumed node
+  repeated LinkState linkStates = 3;
+}
+
+message EstimateLatencyRequest {
+  string ip = 1;
+  int32 port = 2;
+}
+
+message EstimateLatencyResponse {
+  int32 latency = 1;
+}
+
+message GetClusterInfoResponse {
   repeated entpb.Node nodes = 1;
-  repeated LinkState linkStates = 2;
 }
 
 service InitializeService {
+  // request target node to estimate the latency between the target node and the payload node
+  rpc EstimateLatency(EstimateLatencyRequest) returns (EstimateLatencyResponse);
+
+  // request target node to update its link states, and return the updated link states
+  rpc UpdateLinkState(UpdateLinkStateRequest) returns (UpdateLinkStateResponse);
+
   rpc Register(RegisterRequest) returns (RegisterResponse) {
     option (google.api.http) = {
       post: "/initialize"
@@ -36,10 +59,19 @@ service InitializeService {
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       summary: "Join a cluster"
-      description: "A node try to initialize to the cluster"
+      description: "A node try to register to the cluster"
       tags: "Initialize"
     };
   }
 
-  rpc GetNodesInfo(google.protobuf.Empty) returns (GetNodesInfoResponse);
+  rpc GetClusterInfo(google.protobuf.Empty) returns (GetClusterInfoResponse) {
+    option (google.api.http) = {
+      get: "/initialize"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Get nodes info before register"
+      description: "Get nodes info"
+      tags: "Initialize"
+    };
+  }
 }

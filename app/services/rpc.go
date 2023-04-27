@@ -18,7 +18,7 @@ func StartRpcServiceBlocking() {
 
 	tlsConfig, err := security.GenerateRPCTLSConfig(global.App.NodeInfo.ServerCert, global.App.NodeInfo.ServerPrivateKey, global.App.NodeInfo.ClusterCaCert)
 	if err != nil {
-		log.Fatalf("error generating tls config: %v", err)
+		log.Panicf("error generating tls config: %v", err)
 	}
 
 	var listenAddr string
@@ -29,14 +29,14 @@ func StartRpcServiceBlocking() {
 		listenAddr = fmt.Sprintf("%s:%d", global.App.NodeInfo.ServerListenIP.String(), global.App.NodeInfo.ServerPort)
 	}
 
-	ql, err := quic.ListenAddr(listenAddr, tlsConfig, nil)
+	qle, err := quic.ListenAddrEarly(listenAddr, tlsConfig, constant.QuicConfig)
 	if err != nil {
-		log.Fatalf("error listening: %v", err)
+		log.Panicf("error listening: %v", err)
 	}
-	listener := quicNet.Listen(ql)
+	listener := quicNet.Listen(qle)
 
 	if err := grpcServer.Serve(listener); err != nil {
-		log.Fatalf("error serving grpc: %v", err)
+		log.Panicf("error serving grpc: %v", err)
 	}
 
 	clean.RegisterCleanup(func() {

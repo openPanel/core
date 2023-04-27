@@ -5,7 +5,7 @@ import (
 	"net/netip"
 )
 
-func NewAddPortWithString(ip string, port int) netip.AddrPort {
+func NewAddrPortWithString(ip string, port int) netip.AddrPort {
 	return netip.AddrPortFrom(netip.MustParseAddr(ip), uint16(port))
 }
 

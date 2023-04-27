@@ -20,9 +20,31 @@
   ],
   "paths": {
     "/initialize": {
+      "get": {
+        "summary": "Get nodes info before register",
+        "description": "Get nodes info",
+        "operationId": "InitializeService_GetClusterInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/openPanelGetClusterInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "Initialize"
+        ]
+      },
       "post": {
         "summary": "Join a cluster",
-        "description": "A node try to initialize to the cluster",
+        "description": "A node try to register to the cluster",
         "operationId": "InitializeService_Register",
         "responses": {
           "200": {
@@ -93,7 +115,24 @@
         }
       }
     },
-    "openPanelGetNodesInfoResponse": {
+    "openPanelBroadcastType": {
+      "type": "string",
+      "enum": [
+        "NOTIFY_NODE_CHANGE",
+        "NOTIFY_LINK_STATE_CHANGE"
+      ],
+      "default": "NOTIFY_NODE_CHANGE"
+    },
+    "openPanelEstimateLatencyResponse": {
+      "type": "object",
+      "properties": {
+        "latency": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "openPanelGetClusterInfoResponse": {
       "type": "object",
       "properties": {
         "nodes": {
@@ -101,13 +140,6 @@
           "items": {
             "type": "object",
             "$ref": "#/definitions/entpbNode"
-          }
-        },
-        "linkStates": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/openPanelLinkState"
           }
         }
       }
@@ -127,6 +159,18 @@
         }
       }
     },
+    "openPanelMultiBroadcast": {
+      "type": "object",
+      "properties": {
+        "broadcasts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/openPanelSingleBroadcast"
+          }
+        }
+      }
+    },
     "openPanelRegisterRequest": {
       "type": "object",
       "properties": {
@@ -140,12 +184,17 @@
         "serverID": {
           "type": "string"
         },
-        "token": {
-          "type": "string"
-        },
         "csr": {
           "type": "string",
           "format": "byte"
+        },
+        "linkStates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/openPanelLinkState"
+          },
+          "title": "link states from new node to all known nodes"
         }
       }
     },
@@ -160,19 +209,34 @@
           "type": "string",
           "format": "byte"
         },
-        "nodes": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/entpbNode"
-          }
-        },
         "linkStates": {
           "type": "array",
           "items": {
             "type": "object",
             "$ref": "#/definitions/openPanelLinkState"
-          }
+          },
+          "title": "link states of all known nodes, including the new node"
+        }
+      }
+    },
+    "openPanelSingleBroadcast": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/openPanelBroadcastType"
+        }
+      }
+    },
+    "openPanelUpdateLinkStateResponse": {
+      "type": "object",
+      "properties": {
+        "linkStates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/openPanelLinkState"
+          },
+          "title": "the link states of all known nodes, including the resumed node"
         }
       }
     },

@@ -13,8 +13,8 @@ func Test_dijkstraRouteAlgorithm(t *testing.T) {
 	setupTestData()
 	dijkstraRouteAlgorithm()
 
-	assert.Equal(t, routerDecision["B"], nodes["B"].Address)
-	assert.Equal(t, routerDecision["C"], nodes["B"].Address)
-	assert.Equal(t, routerDecision["D"], nodes["B"].Address)
-	assert.Equal(t, routerDecision["E"], nodes["E"].Address)
+	assert.Equal(t, routerDecisions["B"], nodes["B"])
+	assert.Equal(t, routerDecisions["C"], nodes["B"])
+	assert.Equal(t, routerDecisions["D"], nodes["B"])
+	assert.Equal(t, routerDecisions["E"], nodes["E"])
 }

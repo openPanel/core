@@ -2,9 +2,9 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/julienschmidt/httprouter"
@@ -13,6 +13,7 @@ import (
 
 	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/constant"
+	"github.com/openPanel/core/app/db/repo/shared"
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
@@ -24,7 +25,7 @@ import (
 func initGrpcGatewayMux() *runtime.ServeMux {
 	unixListener, err := net.Listen("unix", "")
 	if err != nil {
-		log.Fatalf("error listening: %v", err)
+		log.Panicf("error listening: %v", err)
 	}
 
 	go func() {
@@ -36,7 +37,7 @@ func initGrpcGatewayMux() *runtime.ServeMux {
 		})
 
 		if err := grpcServer.Serve(unixListener); err != nil {
-			log.Fatalf("error serving loop back grpc: %v", err)
+			log.Panicf("error serving loop back grpc: %v", err)
 		}
 	}()
 
@@ -55,7 +56,7 @@ func initGrpcGatewayMux() *runtime.ServeMux {
 			}),
 		})
 	if err != nil {
-		log.Fatalf("error registering grpc gateway: %v", err)
+		log.Panicf("error registering grpc gateway: %v", err)
 	}
 
 	return grpcMux
@@ -69,6 +70,29 @@ func wrapGrpcGatewayMux(mux *runtime.ServeMux) http.Handler {
 		}
 		if r.Header.Get(constant.RPCDestinationMetadataKey) == "" {
 			r.Header.Set(constant.RPCDestinationMetadataKey, global.App.NodeInfo.ServerId)
+		}
+
+		// TODO: strip to a standalone middleware
+		if r.Method != http.MethodOptions && r.Method != http.MethodHead {
+			sentToken := r.Header.Get(constant.HttpAuthorizationTokenHeader)
+			if sentToken == "" {
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte("no auth token provided"))
+				return
+			}
+
+			authedToken, err := shared.KVRepo.Get(context.Background(), string(constant.ConfigKeyAuthorizationToken))
+			if err != nil {
+				log.Errorf("error getting auth token: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			if authedToken != sentToken {
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte("invalid auth token"))
+				return
+			}
 		}
 
 		mux.ServeHTTP(w, r)
@@ -85,7 +109,7 @@ func getServerHandler() http.HandlerFunc {
 func StartHttpServiceBlocking() {
 	tlsConfig, err := security.GenerateHTTPTLSConfig(global.App.NodeInfo.ServerCert, global.App.NodeInfo.ServerPrivateKey)
 	if err != nil {
-		log.Fatalf("error generating tls config: %v", err)
+		log.Panicf("error generating tls config: %v", err)
 	}
 
 	var addr string
@@ -96,7 +120,7 @@ func StartHttpServiceBlocking() {
 	}
 
 	s := &http.Server{
-		Addr:      fmt.Sprintf("%s:%d", addr, global.App.NodeInfo.ServerPort),
+		Addr:      net.JoinHostPort(addr, strconv.Itoa(global.App.NodeInfo.ServerPort)),
 		TLSConfig: tlsConfig,
 		Handler:   getServerHandler(),
 	}
