@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"entgo.io/ent/dialect"
+	"github.com/canonical/go-dqlite"
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/openPanel/core/app/bootstrap/clean"
@@ -53,5 +54,11 @@ func getInitLocalDatabase() *local.Client {
 }
 
 func initLocalDatabase() {
+	// prevent conflict with local db
+	err := dqlite.ConfigMultiThread()
+	if err != nil {
+		log.Panicf("Failed to config dqlite multi thread: %s", err)
+	}
+
 	global.App.DbLocal = getInitLocalDatabase()
 }

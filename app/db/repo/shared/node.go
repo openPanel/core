@@ -5,6 +5,7 @@ import (
 
 	"github.com/openPanel/core/app/db/db"
 	"github.com/openPanel/core/app/generated/db/shared"
+	"github.com/openPanel/core/app/generated/db/shared/node"
 	"github.com/openPanel/core/app/global"
 )
 
@@ -26,15 +27,12 @@ func (r *nodeRepo) GetAll(ctx context.Context) ([]*shared.Node, error) {
 }
 
 func (r *nodeRepo) GetBroadcastNodes(ctx context.Context) ([]*shared.Node, error) {
-	nodes, err := db.GetSharedDb().Node.Query().All(ctx)
+	nodes, err := db.GetSharedDb().
+		Node.Query().
+		Where(node.IDNEQ(global.App.NodeInfo.ServerId)).
+		All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	broadcastNodes := make([]*shared.Node, 0, len(nodes)-1)
-	for _, node := range nodes {
-		if node.ID != global.App.NodeInfo.ServerId {
-			broadcastNodes = append(broadcastNodes, node)
-		}
-	}
-	return broadcastNodes, nil
+	return nodes, nil
 }

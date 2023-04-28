@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/openPanel/core/app/global/log"
-	"github.com/openPanel/core/app/tools/security"
+	"github.com/openPanel/core/app/tools/ca"
 	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
@@ -21,7 +21,7 @@ type newNodeMeta struct {
 	isIndirectIP bool
 }
 
-func generateNewNodeMeta(ip net.IP, port int) newNodeMeta {
+func generateNewNode(ip net.IP, port int) newNodeMeta {
 	serverId := uuid.New().String()
 
 	var publicIp net.IP
@@ -46,7 +46,7 @@ func generateNewNodeMeta(ip net.IP, port int) newNodeMeta {
 
 	serverPort := port
 
-	signingCsr, privateKey, err := security.GenerateCertificateSigningRequest(serverId)
+	signingCsr, privateKey, err := ca.GenerateCertificateSigningRequest(serverId)
 	if err != nil {
 		log.Panicf("Failed to generate certificate signing request: %v", err)
 	}

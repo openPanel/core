@@ -11,25 +11,16 @@ enum BroadcastType {
   NOTIFY_LINK_STATE_CHANGE = 1;
 }
 
-message SingleBroadcast {
+message Broadcast {
   BroadcastType type = 1;
   string payload = 2;
 }
 
-message MultiBroadcast {
-  repeated SingleBroadcast broadcasts = 1;
-}
-
-message SingleBroadcastRequest {
-  SingleBroadcast broadcast = 1;
-}
-
 message MultiBroadcastRequest {
-  MultiBroadcast broadcast = 1;
+  repeated Broadcast broadcasts = 1;
 }
 
 service BroadcastService {
-  rpc SingleBroadcast(SingleBroadcastRequest) returns (google.protobuf.Empty) { }
-  rpc MultiBroadcast(MultiBroadcastRequest) returns (google.protobuf.Empty) { }
+  rpc Broadcast(MultiBroadcastRequest) returns (google.protobuf.Empty);
 }
 

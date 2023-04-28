@@ -13,21 +13,18 @@ import (
 	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
-func getAuthedRequest(token string, serverId string) *resty.Request {
+func getAuthedRequest(token string) *resty.Request {
 	client := netUtils.GetInsecureHttpClient()
 	r := resty.NewWithClient(client).R()
 	r.SetHeader(constant.HttpContentTypeHeader, constant.ContentTypeJson)
 	r.SetHeader(constant.HttpAuthorizationTokenHeader, token)
-	if serverId != "" {
-		r.SetHeader(constant.RPCSourceMetadataKey, serverId)
-	}
 	return r
 }
 
 func GetClusterInfo(target netip.AddrPort, token string) (*pb.GetClusterInfoResponse, error) {
 	var response = &pb.GetClusterInfoResponse{}
 
-	resp, err := getAuthedRequest(token, "").
+	resp, err := getAuthedRequest(token).
 		SetResult(response).
 		Get(fmt.Sprintf("https://%s/initialize", target.String()))
 	if err != nil {
@@ -59,7 +56,7 @@ func RegisterNewNode(
 	}
 	var response = &pb.RegisterResponse{}
 
-	resp, err := getAuthedRequest(token, serverId).
+	resp, err := getAuthedRequest(token).
 		SetBody(request).
 		SetResult(response).
 		Post(fmt.Sprintf("https://%s/initialize", target.String()))

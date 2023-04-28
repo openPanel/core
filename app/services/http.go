@@ -17,8 +17,8 @@ import (
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
+	"github.com/openPanel/core/app/tools/ca"
 	"github.com/openPanel/core/app/tools/middleware/gateway"
-	"github.com/openPanel/core/app/tools/security"
 	"github.com/openPanel/core/third_party/OpenAPI"
 )
 
@@ -107,7 +107,7 @@ func getServerHandler() http.HandlerFunc {
 }
 
 func StartHttpServiceBlocking() {
-	tlsConfig, err := security.GenerateHTTPTLSConfig(global.App.NodeInfo.ServerCert, global.App.NodeInfo.ServerPrivateKey)
+	tlsConfig, err := ca.GenerateHTTPTLSConfig(global.App.NodeInfo.ServerCert, global.App.NodeInfo.ServerPrivateKey)
 	if err != nil {
 		log.Panicf("error generating tls config: %v", err)
 	}

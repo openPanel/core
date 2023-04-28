@@ -11,8 +11,8 @@ import (
 )
 
 type Edge struct {
-	From string
-	To   string
+	From string `json:"f"`
+	To   string `json:"t"`
 }
 
 type LinkStates = map[Edge]int
@@ -122,11 +122,13 @@ func filterRouterInfos(id string) {
 	}
 }
 
-func UpdateLinkStates(infos LinkStates) {
+func UpdateLinkStates(infos ...LinkStates) {
 	lsLock.Lock()
 
-	for link, latency := range infos {
-		linkStates[link] = latency
+	for _, info := range infos {
+		for link, latency := range info {
+			linkStates[link] = latency
+		}
 	}
 
 	lsLock.Unlock()

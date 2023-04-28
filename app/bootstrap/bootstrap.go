@@ -1,21 +1,19 @@
 package bootstrap
 
 import (
-	"context"
 	"net"
 
 	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/clients/http"
 	"github.com/openPanel/core/app/clients/rpc"
 	"github.com/openPanel/core/app/config"
-	"github.com/openPanel/core/app/db/repo/shared"
-	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/cron"
 	"github.com/openPanel/core/app/manager/router"
 	"github.com/openPanel/core/app/services"
-	"github.com/openPanel/core/app/tools/security"
+	"github.com/openPanel/core/app/tools/ca"
+	"github.com/openPanel/core/app/tools/convert"
 	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
@@ -24,15 +22,15 @@ func Create(listenIp net.IP, listenPort int) {
 	requireFirstStartUp()
 	commonInit()
 
-	meta := generateNewNodeMeta(listenIp, listenPort)
+	meta := generateNewNode(listenIp, listenPort)
 
-	caCert, caKey, err := security.GenerateCACertificate()
+	caCert, caKey, err := ca.GenerateCACertificate()
 	if err != nil {
 		log.Panicf("Failed to generate CA certificate: %v", err)
 	}
 	log.Info("CA certificate generated")
 
-	localServerCert, err := security.SignCsr(caCert, caKey, meta.csr)
+	localServerCert, err := ca.SignCsr(caCert, caKey, meta.csr)
 	if err != nil {
 		log.Panicf("Failed to sign local certificate: %v", err)
 	}
@@ -66,33 +64,12 @@ func Create(listenIp net.IP, listenPort int) {
 	global.App.DbShared = createDqlite()
 	log.Info("Dqlite database configured")
 
-	err = config.SaveClusterInfo(global.App.ClusterInfo)
+	err = initializeDqlite()
 	if err != nil {
-		log.Panicf("Failed to save cluster info: %v", err)
-	}
-	err = shared.NodeRepo.AddNode(context.Background(),
-		global.App.NodeInfo.ServerId,
-		global.App.NodeInfo.ServerPublicIP.String(),
-		global.App.NodeInfo.ServerPort,
-	)
-	if err != nil {
-		log.Panicf("Failed to add node to database: %v", err)
-		return
+		log.Panicf("Failed to initialize database in dqlite: %v", err)
 	}
 
-	go services.StartRpcServiceBlocking()
-	log.Infof("RPC service started on %s:%d", listenIp.String(), listenPort)
-
-	go services.StartHttpServiceBlocking()
-	log.Infof("HTTP service started on %s:%d", listenIp.String(), listenPort)
-
-	// store a cluster scoped token
-	err = createToken()
-	if err != nil {
-		log.Panicf("Failed to create token: %v", err)
-	}
-
-	lateInit()
+	startServices()
 
 	clean.RunEndless()
 }
@@ -112,7 +89,7 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 		}
 	}()
 
-	meta := generateNewNodeMeta(listenIp, listenPort)
+	meta := generateNewNode(listenIp, listenPort)
 	target := netUtils.NewAddrPortWithIP(ip, port)
 
 	// contains known node in the cluster
@@ -131,15 +108,6 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 	linkStates := router.EstimateLatencies(routerNodes[1:])
 	log.Infof("Latencies estimated")
 
-	pbLinkStates := make([]*pb.LinkState, len(linkStates))
-	for edge, latency := range linkStates {
-		pbLinkStates = append(pbLinkStates, &pb.LinkState{
-			From:    edge.From,
-			To:      edge.To,
-			Latency: int32(latency),
-		})
-	}
-
 	registerInfo, err := http.RegisterNewNode(
 		target,
 		meta.serverPublicIp,
@@ -147,42 +115,35 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 		token,
 		meta.csr,
 		meta.serverId,
-		pbLinkStates)
+		convert.LinkStatesRouterToPb(linkStates))
 	if err != nil {
 		log.Panicf("Failed to register: %v", err)
 	}
 
-	node := global.NodeInfo{
+	global.App.NodeInfo = global.NodeInfo{
 		ServerId:         meta.serverId,
 		ServerPublicIP:   meta.serverPublicIp,
 		ServerListenIP:   meta.serverListenIp,
 		ServerPort:       meta.serverPort,
-		ServerCert:       registerInfo.ClientCert,
 		ServerPrivateKey: meta.privateKey,
-		ClusterCaCert:    registerInfo.ClusterCACert,
 		IsIndirectIP:     meta.isIndirectIP,
+		ServerCert:       registerInfo.ClientCert,
+		ClusterCaCert:    registerInfo.ClusterCACert,
 	}
-	err = config.SaveLocalNodeInfo(node)
+	err = config.SaveLocalNodeInfo(global.App.NodeInfo)
 	if err != nil {
 		log.Panicf("Failed to save node info: %v", err)
 	}
-	global.App.NodeInfo = node
 
-	loadLinkStates(registerInfo.LinkStates)
+	router.UpdateLinkStates(convert.LinkStatesPbToRouter(registerInfo.LinkStates))
 
-	global.App.DbShared = joinDqlite(routerNodes[1:])
+	global.App.DbShared = dqliteJoin(routerNodes[1:])
 	global.App.ClusterInfo, err = config.LoadClusterInfo()
 	if err != nil {
 		log.Panicf("Failed to load cluster info: %v", err)
 	}
 
-	go services.StartRpcServiceBlocking()
-	log.Infof("RPC service started on %s:%d", listenIp.String(), listenPort)
-
-	go services.StartHttpServiceBlocking()
-	log.Infof("HTTP service started on %s:%d", listenIp.String(), listenPort)
-
-	lateInit()
+	startServices()
 
 	initialized = true
 	clean.RunEndless()
@@ -191,7 +152,6 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 // Resume resume a node to cluster
 func Resume() {
 	requireNonFirstStartUp()
-
 	commonInit()
 
 	var err error
@@ -223,7 +183,7 @@ func Resume() {
 			})
 		}
 
-		addrs, err := rpc.TryUpdateRouterNode(targets)
+		addrs, err := rpc.SyncLinkStates(targets)
 		if err != nil {
 			log.Panicf("Failed to update router info: %v", err)
 		}
@@ -238,13 +198,7 @@ func Resume() {
 		log.Panicf("Failed to load cluster info: %v", err)
 	}
 
-	go services.StartRpcServiceBlocking()
-	log.Infof("RPC service started on %s:%d", global.App.NodeInfo.ServerListenIP, global.App.NodeInfo.ServerPort)
-
-	go services.StartHttpServiceBlocking()
-	log.Infof("HTTP service started on %s:%d", global.App.NodeInfo.ServerListenIP, global.App.NodeInfo.ServerPort)
-
-	lateInit()
+	startServices()
 
 	clean.RunEndless()
 }
@@ -258,6 +212,13 @@ func commonInit() {
 	initLocalDatabase()
 }
 
-func lateInit() {
+func startServices() {
 	go cron.Start()
+	log.Infof("Cron service started")
+
+	go services.StartRpcServiceBlocking()
+	log.Infof("RPC service started on %s:%d", global.App.NodeInfo.ServerListenIP, global.App.NodeInfo.ServerPort)
+
+	go services.StartHttpServiceBlocking()
+	log.Infof("HTTP service started on %s:%d", global.App.NodeInfo.ServerListenIP, global.App.NodeInfo.ServerPort)
 }

@@ -1,9 +1,12 @@
 package bootstrap
 
 import (
-	"net/netip"
+	"context"
 
+	"github.com/openPanel/core/app/config"
+	. "github.com/openPanel/core/app/db/repo/shared"
 	"github.com/openPanel/core/app/generated/db/shared"
+	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/manager/dqlite"
 	"github.com/openPanel/core/app/manager/router"
 )
@@ -13,8 +16,31 @@ func createDqlite() *shared.Client {
 	return dqlite.CreateSharedDatabase(nil)
 }
 
+
+func initializeDqlite() error {
+	err := config.SaveClusterInfo(global.App.ClusterInfo)
+	if err != nil {
+		return err
+	}
+	err = NodeRepo.AddNode(context.Background(),
+		global.App.NodeInfo.ServerId,
+		global.App.NodeInfo.ServerPublicIP.String(),
+		global.App.NodeInfo.ServerPort,
+	)
+	if err != nil {
+		return err
+	}
+
+	// store a cluster scoped token
+	err = createToken()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // for success join, len(nodes) >= 1
-func joinDqlite(nodes []router.Node) *shared.Client {
+func dqliteJoin(nodes []router.Node) *shared.Client {
 	addrs := make([]string, len(nodes))
 	for i, node := range nodes {
 		addrs[i] = node.AddrPort.String()
@@ -23,14 +49,14 @@ func joinDqlite(nodes []router.Node) *shared.Client {
 }
 
 // at resume, len(addrs) >= 0, if len(addrs) == 0, it means that the node is the first node
-func resumeDqlite(addrs []netip.AddrPort) *shared.Client {
-	if len(addrs) == 0 {
+func resumeDqlite(nodes []router.Node) *shared.Client {
+	if len(nodes) == 0 {
 		return dqlite.CreateSharedDatabase(nil)
 	}
 
-	addresses := make([]string, len(addrs))
-	for i, addr := range addrs {
-		addresses[i] = addr.String()
+	addrs := make([]string, len(nodes))
+	for i, node := range nodes {
+		addrs[i] = node.AddrPort.String()
 	}
-	return dqlite.CreateSharedDatabase(&addresses)
+	return dqlite.CreateSharedDatabase(&addrs)
 }

@@ -6,9 +6,9 @@ import (
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/router"
+	"github.com/openPanel/core/app/tools/ca"
 	"github.com/openPanel/core/app/tools/middleware/client"
 	"github.com/openPanel/core/app/tools/quicNet"
-	"github.com/openPanel/core/app/tools/security"
 )
 
 func DialWithAddress(address, target string) (*grpc.ClientConn, error) {
@@ -17,7 +17,7 @@ func DialWithAddress(address, target string) (*grpc.ClientConn, error) {
 		return cachedConn, nil
 	}
 
-	tlsConfig, err := security.GenerateRPCTLSConfig(
+	tlsConfig, err := ca.GenerateRPCTLSConfig(
 		global.App.NodeInfo.ServerCert,
 		global.App.NodeInfo.ServerPrivateKey,
 		global.App.NodeInfo.ClusterCaCert,

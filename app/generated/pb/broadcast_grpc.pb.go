@@ -20,16 +20,14 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	BroadcastService_SingleBroadcast_FullMethodName = "/openPanel.BroadcastService/SingleBroadcast"
-	BroadcastService_MultiBroadcast_FullMethodName  = "/openPanel.BroadcastService/MultiBroadcast"
+	BroadcastService_Broadcast_FullMethodName = "/openPanel.BroadcastService/Broadcast"
 )
 
 // BroadcastServiceClient is the client API for BroadcastService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BroadcastServiceClient interface {
-	SingleBroadcast(ctx context.Context, in *SingleBroadcastRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	MultiBroadcast(ctx context.Context, in *MultiBroadcastRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Broadcast(ctx context.Context, in *MultiBroadcastRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type broadcastServiceClient struct {
@@ -40,18 +38,9 @@ func NewBroadcastServiceClient(cc grpc.ClientConnInterface) BroadcastServiceClie
 	return &broadcastServiceClient{cc}
 }
 
-func (c *broadcastServiceClient) SingleBroadcast(ctx context.Context, in *SingleBroadcastRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *broadcastServiceClient) Broadcast(ctx context.Context, in *MultiBroadcastRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, BroadcastService_SingleBroadcast_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *broadcastServiceClient) MultiBroadcast(ctx context.Context, in *MultiBroadcastRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, BroadcastService_MultiBroadcast_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, BroadcastService_Broadcast_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,19 +51,15 @@ func (c *broadcastServiceClient) MultiBroadcast(ctx context.Context, in *MultiBr
 // All implementations should embed UnimplementedBroadcastServiceServer
 // for forward compatibility
 type BroadcastServiceServer interface {
-	SingleBroadcast(context.Context, *SingleBroadcastRequest) (*emptypb.Empty, error)
-	MultiBroadcast(context.Context, *MultiBroadcastRequest) (*emptypb.Empty, error)
+	Broadcast(context.Context, *MultiBroadcastRequest) (*emptypb.Empty, error)
 }
 
 // UnimplementedBroadcastServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedBroadcastServiceServer struct {
 }
 
-func (UnimplementedBroadcastServiceServer) SingleBroadcast(context.Context, *SingleBroadcastRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SingleBroadcast not implemented")
-}
-func (UnimplementedBroadcastServiceServer) MultiBroadcast(context.Context, *MultiBroadcastRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MultiBroadcast not implemented")
+func (UnimplementedBroadcastServiceServer) Broadcast(context.Context, *MultiBroadcastRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Broadcast not implemented")
 }
 
 // UnsafeBroadcastServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -88,38 +73,20 @@ func RegisterBroadcastServiceServer(s grpc.ServiceRegistrar, srv BroadcastServic
 	s.RegisterService(&BroadcastService_ServiceDesc, srv)
 }
 
-func _BroadcastService_SingleBroadcast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SingleBroadcastRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(BroadcastServiceServer).SingleBroadcast(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: BroadcastService_SingleBroadcast_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BroadcastServiceServer).SingleBroadcast(ctx, req.(*SingleBroadcastRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _BroadcastService_MultiBroadcast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _BroadcastService_Broadcast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MultiBroadcastRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BroadcastServiceServer).MultiBroadcast(ctx, in)
+		return srv.(BroadcastServiceServer).Broadcast(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: BroadcastService_MultiBroadcast_FullMethodName,
+		FullMethod: BroadcastService_Broadcast_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BroadcastServiceServer).MultiBroadcast(ctx, req.(*MultiBroadcastRequest))
+		return srv.(BroadcastServiceServer).Broadcast(ctx, req.(*MultiBroadcastRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -132,12 +99,8 @@ var BroadcastService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*BroadcastServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SingleBroadcast",
-			Handler:    _BroadcastService_SingleBroadcast_Handler,
-		},
-		{
-			MethodName: "MultiBroadcast",
-			Handler:    _BroadcastService_MultiBroadcast_Handler,
+			MethodName: "Broadcast",
+			Handler:    _BroadcastService_Broadcast_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

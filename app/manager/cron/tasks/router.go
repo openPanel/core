@@ -1,51 +1,34 @@
 package tasks
 
 import (
-	"context"
-	"sync"
+	"encoding/json"
 
 	"github.com/openPanel/core/app/clients/rpc"
-	"github.com/openPanel/core/app/db/repo/shared"
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/router"
+	"github.com/openPanel/core/app/tools/convert"
 )
 
 func EstimateAndBroadcastLinkState() {
 	infos := router.EstimateAndStoreLatencies()
-	nodes, err := shared.NodeRepo.GetBroadcastNodes(context.Background())
+
+	router.UpdateLinkStates(infos)
+
+	linkStates := convert.LinkStatesRouterToPb(router.GetLinkStates())
+	broadcastPayload, err := json.Marshal(linkStates)
 	if err != nil {
-		log.Errorf("cron: failed to load nodes cache: %v", err)
+		log.Errorf("cron: failed to marshal link state: %v", err)
+		return
 	}
 
-	linkStates := make([]*pb.LinkState, 0, len(infos))
-	for edge, latency := range infos {
-		linkStates = append(linkStates, &pb.LinkState{
-			From:    edge.From,
-			To:      edge.To,
-			Latency: int32(latency),
-		})
+	err = rpc.Broadcast([]rpc.BroadcastMessage{{
+		Type:    pb.BroadcastType_NOTIFY_LINK_STATE_CHANGE,
+		Payload: string(broadcastPayload),
+	}})
+	if err != nil {
+		log.Errorf("cron: failed to broadcast link state: %v", err)
+		return
 	}
-
-	errs := make([]error, 0, len(nodes))
-
-	wg := sync.WaitGroup{}
-	wg.Add(len(nodes))
-	for _, node := range nodes {
-		go func(target string) {
-			defer wg.Done()
-
-			err := rpc.UpdateLinkState(target, linkStates)
-			if err != nil {
-				log.Warnf("cron: failed to broadcast link state to node %s: %v", target, err)
-				errs = append(errs, err)
-			}
-		}(node.ID)
-	}
-
-	wg.Wait()
-	if len(errs) > len(nodes)/2 {
-		log.Errorf("cron: failed to broadcast link state to more than half of nodes")
-	}
-	log.Infof("cron: broadcast link state to %d nodes", len(nodes)-len(errs))
+	log.Infof("cron: broadcast link state periodically")
 }

@@ -9,12 +9,12 @@ import (
 	"github.com/openPanel/core/app/global/log"
 )
 
-func EstimateLatencies(nodes []Node) map[Edge]int {
+func EstimateLatencies(nodes []Node) LinkStates {
 	wg := sync.WaitGroup{}
+	wg.Add(len(nodes))
 	infos := map[Edge]int{}
 
 	for _, node := range nodes {
-		wg.Add(1)
 		go func(id string, addr netip.AddrPort) {
 			defer wg.Done()
 
@@ -38,17 +38,17 @@ func EstimateLatencies(nodes []Node) map[Edge]int {
 }
 
 // EstimateAndStoreLatencies Estimate the latency between nodes and store it in the router info
-func EstimateAndStoreLatencies() map[Edge]int {
-	newNodes := make([]Node, 0, len(nodes) - 1)
+func EstimateAndStoreLatencies() LinkStates {
+	filteredNodes := make([]Node, 0, len(nodes) - 1)
 	ndLock.RLock()
 	for _, node := range flattenNodes() {
 		if node.Id != global.App.NodeInfo.ServerId {
-			newNodes = append(newNodes, node)
+			filteredNodes = append(filteredNodes, node)
 		}
 	}
 	ndLock.RUnlock()
 
-	infos := EstimateLatencies(newNodes)
+	infos := EstimateLatencies(filteredNodes)
 
 	UpdateLinkStates(infos)
 

@@ -9,14 +9,14 @@ import (
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
+	"github.com/openPanel/core/app/tools/ca"
 	"github.com/openPanel/core/app/tools/quicNet"
-	"github.com/openPanel/core/app/tools/security"
 )
 
 func StartRpcServiceBlocking() {
 	grpcServer := newGrpcServer()
 
-	tlsConfig, err := security.GenerateRPCTLSConfig(global.App.NodeInfo.ServerCert, global.App.NodeInfo.ServerPrivateKey, global.App.NodeInfo.ClusterCaCert)
+	tlsConfig, err := ca.GenerateRPCTLSConfig(global.App.NodeInfo.ServerCert, global.App.NodeInfo.ServerPrivateKey, global.App.NodeInfo.ClusterCaCert)
 	if err != nil {
 		log.Panicf("error generating tls config: %v", err)
 	}

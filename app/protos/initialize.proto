@@ -23,8 +23,13 @@ message RegisterResponse {
 }
 
 message UpdateLinkStateRequest {
+  // info of the resumed node, used to estimate the latency between the
+  // resumed node and all other nodes in the cluster
+  string ip = 1;
+  int32 port = 2;
+  string serverID = 3;
   // the link states from a resumed node
-  repeated LinkState linkStates = 3;
+  repeated LinkState linkStates = 4;
 }
 
 message UpdateLinkStateResponse {

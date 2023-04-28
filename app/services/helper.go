@@ -40,7 +40,7 @@ func newGrpcServer() *grpc.Server {
 }
 
 func registerServers(server *grpc.Server) {
-	pb.RegisterLinkStateServiceServer(server, LinkStateService)
+	pb.RegisterBroadcastServiceServer(server, BroadcastService)
 	pb.RegisterInitializeServiceServer(server, InitializeService)
 	pb.RegisterDqliteConnectionServer(server, DqliteService)
 }

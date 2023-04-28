@@ -45,6 +45,7 @@ func cleanData() error {
 		slog.Fatalf("Failed to clean data dir: %v", err)
 	}
 	slog.Println("Initialization failed, data dir cleaned")
+	return nil
 }
 
 func increaseUDPBufferSize() {
