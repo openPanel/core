@@ -3,28 +3,51 @@ version: "3"
 env:
   CGO_LDFLAGS_ALLOW: "-Wl,-z,now"
 
+
+vars:
+  PACKAGE: "github.com/openPanel/core"
+  # ldflags
+  STATIC_LDFLAGS: "linkmode=external -extldflags '-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a'"
+  STATIC_STRIP_LDFLAGS: "linkmode=external -s -w -extldflags '-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a'"
+  # gcflags
+  GCFLAGS: "all=-N -l"
+  # cgo
+  CC: "ccache gcc"
+  CXX: "ccache g++"
+  # tags
+  STATIC_TAGS: "osusergo netgo static_build"
+  URFAVE_CLI_TAGS: "urfave_cli_no_docs"
+  SQLITE_TAGS: "sqlite_omit_load_extension sqlite_foreign_keys"
+  RELEASE_TAGS: "release {{.STATIC_TAGS}} {{.URFAVE_CLI_TAGS}} {{.SQLITE_TAGS}}"
+  DEBUG_TAGS: "{{.URFAVE_CLI_TAGS}} {{.SQLITE_TAGS}}"
+  ANALYSIS_TAGS: "{{.STATIC_TAGS}} {{.DEBUG_TAGS}}"
+
 tasks:
   build-release:
     cmds:
-      - "go build
-        -tags 'urfave_cli_no_docs release osusergo netgo static_build sqlite_omit_load_extension sqlite_foreign_keys'
-        -trimpath -ldflags '-linkmode \"external\" -s -w -extldflags \"-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a\"'
-        -o ./bin/openPanel github.com/openPanel/core"
+      - >+
+        go build
+        -tags "{{.RELEASE_TAGS}}"
+        -trimpath 
+        -ldflags "{{.STATIC_STRIP_LDFLAGS}}"
+        -o ./bin/openPanel {{.PACKAGE}}
 
   build-debug:
     cmds:
-      - "go build
-        -tags 'urfave_cli_no_docs osusergo netgo static_build sqlite_omit_load_extension sqlite_foreign_keys'
-        -ldflags '-linkmode \"external\" -extldflags \"-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a\"'
-        -o ./bin/openPanel.debug github.com/openPanel/core"
+      - >+
+        go build
+        -tags "{{.DEBUG_TAGS}}"
+        -ldflags "{{.STATIC_LDFLAGS}}"
+        -o ./bin/openPanel.debug {{.PACKAGE}}
 
   build-analysis:
     cmds:
-      - "go build
-        -tags 'urfave_cli_no_docs osusergo netgo static_build sqlite_omit_load_extension sqlite_foreign_keys'
-        -ldflags '-linkmode \"external\" -extldflags \"-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a\"'
-        -gcflags \"all=-N -l\"
-        -o ./bin/openPanel.analysis github.com/openPanel/core"
+      - >+
+        "go build
+        -tags "{{.ANALYSIS_TAGS}}"
+        -ldflags "{{.STATIC_LDFLAGS}}"
+        -gcflags "{{.GCFLAGS}}"
+        -o ./bin/openPanel.analysis {{.PACKAGE}}"
 
   install_deps:
     cmds:
