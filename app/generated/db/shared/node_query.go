@@ -18,7 +18,7 @@ import (
 type NodeQuery struct {
 	config
 	ctx        *QueryContext
-	order      []OrderFunc
+	order      []node.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Node
 	modifiers  []func(*sql.Selector)
@@ -53,7 +53,7 @@ func (nq *NodeQuery) Unique(unique bool) *NodeQuery {
 }
 
 // Order specifies how the records should be ordered.
-func (nq *NodeQuery) Order(o ...OrderFunc) *NodeQuery {
+func (nq *NodeQuery) Order(o ...node.OrderOption) *NodeQuery {
 	nq.order = append(nq.order, o...)
 	return nq
 }
@@ -247,7 +247,7 @@ func (nq *NodeQuery) Clone() *NodeQuery {
 	return &NodeQuery{
 		config:     nq.config,
 		ctx:        nq.ctx.Clone(),
-		order:      append([]OrderFunc{}, nq.order...),
+		order:      append([]node.OrderOption{}, nq.order...),
 		inters:     append([]Interceptor{}, nq.inters...),
 		predicates: append([]predicate.Node{}, nq.predicates...),
 		// clone intermediate query.

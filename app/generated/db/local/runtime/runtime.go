@@ -5,5 +5,5 @@ package runtime
 // The schema-stitching logic is generated in github.com/openPanel/core/app/generated/db/local/runtime.go
 
 const (
-	Version = "v0.11.10" // Version of ent codegen.
+	Version = "v0.12.2" // Version of ent codegen.
 )

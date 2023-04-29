@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"entgo.io/contrib/entproto"
@@ -13,24 +14,30 @@ import (
 func ent() {
 	log.Println("running ent codegen")
 
+	protoExt, _ := entproto.NewExtension(entproto.WithProtoDir(""))
+
 	names := []string{"local", "shared"}
 	for _, name := range names {
-		var hooks = make([]gen.Hook, 0)
+		var exts []entc.Extension
 		if name == "shared" {
-			hooks = append(hooks, entproto.Hook())
+			exts = append(exts, protoExt)
 		}
 
-		err := entc.Generate("./app/db/schema/"+name, &gen.Config{
+		targetDir, err := filepath.Abs("./app/generated/db/" + name)
+		if err != nil {
+			log.Fatalf("failed to get absolute path: %v", err)
+		}
+
+		err = entc.Generate("./app/db/schema/"+name, &gen.Config{
 			Features: []gen.Feature{
 				gen.FeatureUpsert,
 				gen.FeatureNamedEdges,
 				gen.FeatureModifier,
 			},
-			Target:  "./app/generated/db/" + name,
+			Target:  targetDir,
 			Package: "github.com/openPanel/core/app/generated/db/" + name,
 			Schema:  "github.com/openPanel/core/app/db/schema/" + name,
-			Hooks:   hooks,
-		})
+		}, entc.Extensions(exts...))
 		if err != nil {
 			log.Fatalf("running ent codegen: %v", err)
 		}

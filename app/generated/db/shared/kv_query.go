@@ -18,7 +18,7 @@ import (
 type KVQuery struct {
 	config
 	ctx        *QueryContext
-	order      []OrderFunc
+	order      []kv.OrderOption
 	inters     []Interceptor
 	predicates []predicate.KV
 	modifiers  []func(*sql.Selector)
@@ -53,7 +53,7 @@ func (kq *KVQuery) Unique(unique bool) *KVQuery {
 }
 
 // Order specifies how the records should be ordered.
-func (kq *KVQuery) Order(o ...OrderFunc) *KVQuery {
+func (kq *KVQuery) Order(o ...kv.OrderOption) *KVQuery {
 	kq.order = append(kq.order, o...)
 	return kq
 }
@@ -247,7 +247,7 @@ func (kq *KVQuery) Clone() *KVQuery {
 	return &KVQuery{
 		config:     kq.config,
 		ctx:        kq.ctx.Clone(),
-		order:      append([]OrderFunc{}, kq.order...),
+		order:      append([]kv.OrderOption{}, kq.order...),
 		inters:     append([]Interceptor{}, kq.inters...),
 		predicates: append([]predicate.KV{}, kq.predicates...),
 		// clone intermediate query.

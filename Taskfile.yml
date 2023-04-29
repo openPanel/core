@@ -56,6 +56,19 @@ tasks:
       - "sudo apt-get update"
       - "sudo apt install -y liblz4-dev liblz4-tool libuv1-dev libsqlite3-dev"
 
+  gen_grpc:
+    cmds:
+      - buf generate
+
+  gen_ent:
+    cmds:
+      - go run github.com/openPanel/core/scripts ent
+
+  gen:
+    deps:
+      - gen_grpc
+      - gen_ent
+
   bingo:
     cmds:
       - "go install github.com/bwplotka/bingo@latest"
