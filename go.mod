@@ -18,6 +18,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/pkg/errors v0.9.1
 	github.com/quic-go/quic-go v0.34.0
+	github.com/samber/lo v1.38.1
 	github.com/stretchr/testify v1.8.2
 	github.com/urfave/cli/v2 v2.25.1
 	github.com/zekroTJA/timedmap v1.5.1
@@ -55,7 +56,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/qtls-go1-19 v0.3.2 // indirect
 	github.com/quic-go/qtls-go1-20 v0.2.2 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect

@@ -183,12 +183,15 @@ func Resume() {
 			})
 		}
 
-		addrs, err := rpc.SyncLinkStates(targets)
+		nodes, lst, err := rpc.SyncNodesAndLinkStates(targets)
 		if err != nil {
 			log.Panicf("Failed to update router info: %v", err)
 		}
 
-		global.App.DbShared = resumeDqlite(addrs)
+		router.SetNodes(nodes)
+		router.UpdateLinkStates(lst)
+
+		global.App.DbShared = resumeDqlite(nodes)
 	} else {
 		global.App.DbShared = resumeDqlite(nil)
 	}
