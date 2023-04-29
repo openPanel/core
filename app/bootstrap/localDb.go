@@ -54,7 +54,7 @@ func getInitLocalDatabase() *local.Client {
 }
 
 func initLocalDatabase() {
-	// prevent conflict with local db
+	// prevent dqlite conflict with local db
 	err := dqlite.ConfigMultiThread()
 	if err != nil {
 		log.Panicf("Failed to config dqlite multi thread: %s", err)

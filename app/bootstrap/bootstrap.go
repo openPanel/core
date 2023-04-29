@@ -210,7 +210,7 @@ func commonInit() {
 	initLogger()
 
 	requireRoot()
-	increaseUDPBufferSize()
+	requireEnoughUDPBuffer()
 
 	initLocalDatabase()
 }

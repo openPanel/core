@@ -48,7 +48,7 @@ func cleanData() error {
 	return nil
 }
 
-func increaseUDPBufferSize() {
+func requireEnoughUDPBuffer() {
 	v, err := sysctl.Get(constant.SysctlUdpBufferSizeKey)
 	if err != nil {
 		log.Fatalf("Failed to read udp buffer: %v", err)

@@ -2,12 +2,10 @@ package dqlite
 
 import (
 	"context"
-	"sync"
 
 	"entgo.io/ent/dialect"
-	dqliteApp "github.com/canonical/go-dqlite/app"
-
 	"entgo.io/ent/dialect/sql"
+	"github.com/canonical/go-dqlite/app"
 
 	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/constant"
@@ -17,17 +15,16 @@ import (
 	"github.com/openPanel/core/app/tools/utils/fileUtils"
 )
 
-var createOnce = sync.Once{}
 var sharedClient *shared.Client
 
 func createSharedDatabase(clusterAddrs *[]string) (*shared.Client, error) {
-	options := []dqliteApp.Option{
-		dqliteApp.WithAddress(global.App.NodeInfo.ServerId),
-		dqliteApp.WithLogFunc(getDqliteLogger()),
-		dqliteApp.WithExternalConn(DialFunction, AcceptChan),
+	options := []app.Option{
+		app.WithAddress(global.App.NodeInfo.ServerId),
+		app.WithLogFunc(getDqliteLogger()),
+		app.WithExternalConn(DialFunction, AcceptChan),
 	}
 	if clusterAddrs != nil {
-		options = append(options, dqliteApp.WithCluster(*clusterAddrs))
+		options = append(options, app.WithCluster(*clusterAddrs))
 	}
 
 	dqliteDir, err := fileUtils.RequireDataDir(constant.DqliteDataDir)
@@ -35,17 +32,17 @@ func createSharedDatabase(clusterAddrs *[]string) (*shared.Client, error) {
 		return nil, err
 	}
 
-	app, err := dqliteApp.New(dqliteDir, options...)
+	dqliteApp, err := app.New(dqliteDir, options...)
 	if err != nil {
 		return nil, err
 	}
 
-	err = app.Ready(context.Background())
+	err = dqliteApp.Ready(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	db, err := app.Open(context.Background(), constant.SharedDatabaseDSN)
+	db, err := dqliteApp.Open(context.Background(), constant.SharedDatabaseDSN)
 	if err != nil {
 		return nil, err
 	}
@@ -67,11 +64,11 @@ func createSharedDatabase(clusterAddrs *[]string) (*shared.Client, error) {
 		if err != nil {
 			log.Warn("Failed to close shared database: %v", err)
 		}
-		err = app.Handover(context.Background())
+		err = dqliteApp.Handover(context.Background())
 		if err != nil {
 			log.Warn("Failed to handover dqlite: %v", err)
 		}
-		err = app.Close()
+		err = dqliteApp.Close()
 		if err != nil {
 			log.Warn("Failed to close dqlite: %v", err)
 		}
@@ -82,12 +79,11 @@ func createSharedDatabase(clusterAddrs *[]string) (*shared.Client, error) {
 }
 
 func CreateSharedDatabase(serverAddr *[]string) *shared.Client {
-	createOnce.Do(func() {
-		var err error
-		sharedClient, err = createSharedDatabase(serverAddr)
-		if err != nil {
-			log.Panicf("Failed to create shared database: %v", err)
-		}
-	})
+	var err error
+	sharedClient, err = createSharedDatabase(serverAddr)
+	if err != nil {
+		log.Panicf("Failed to create shared database: %v", err)
+	}
+
 	return sharedClient
 }
