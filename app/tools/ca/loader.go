@@ -5,6 +5,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+
+	"github.com/openPanel/core/app/constant"
 )
 
 func loadServerCert(certBytes, keyBytes []byte) (*tls.Certificate, error) {
@@ -50,7 +52,8 @@ func GenerateRPCTLSConfig(certBytes, keyBytes, caCertBytes []byte) (*tls.Config,
 		RootCAs:      certPool.Clone(),
 		ClientCAs:    certPool.Clone(),
 		ClientAuth:   tls.RequireAndVerifyClientCert,
-		NextProtos:   []string{"qtls"},
+		NextProtos:   []string{constant.RPCProtocolName},
+		MinVersion:   tls.VersionTLS13,
 	}, nil
 }
 

@@ -1,4 +1,4 @@
-package quicNet
+package quicgrpc
 
 import (
 	"context"

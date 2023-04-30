@@ -8,7 +8,7 @@ import (
 	"github.com/openPanel/core/app/manager/router"
 	"github.com/openPanel/core/app/tools/ca"
 	"github.com/openPanel/core/app/tools/middleware/client"
-	"github.com/openPanel/core/app/tools/quicNet"
+	"github.com/openPanel/core/app/tools/quicgrpc"
 )
 
 func DialWithAddress(address, target string) (*grpc.ClientConn, error) {
@@ -26,16 +26,17 @@ func DialWithAddress(address, target string) (*grpc.ClientConn, error) {
 		log.Errorf("error generating tls config: %v", err)
 		return nil, err
 	}
+	tlsConfig.ServerName = target
 
-	creds := quicNet.NewCredentials(tlsConfig)
-	dialer := quicNet.NewQuicDialer(tlsConfig)
+	creds := quicgrpc.NewCredentials(tlsConfig)
+	dialer := quicgrpc.NewQuicDialer(tlsConfig)
 
 	options := []grpc.DialOption{
 		grpc.WithTransportCredentials(creds),
 		grpc.WithContextDialer(dialer),
+		grpc.WithAuthority(target),
 		client.GetStreamInterceptorOption(global.App.NodeInfo.ServerId, target),
 		client.GetUnaryInterceptorOption(global.App.NodeInfo.ServerId, target),
-		grpc.WithAuthority(target),
 	}
 	conn, err := grpc.Dial(address, options...)
 	if err != nil {

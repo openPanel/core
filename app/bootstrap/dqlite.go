@@ -40,7 +40,7 @@ func initializeDqlite() error {
 
 // for success join, len(nodes) >= 1
 func dqliteJoin(nodes []router.Node) *shared.Client {
-	return dqlite.CreateSharedDatabase(routerNodesToDqliteAddrPort(nodes))
+	return dqlite.CreateSharedDatabase(routerNodesToDqliteAddr(nodes))
 }
 
 // at resume, len(addrs) >= 0, if len(addrs) == 0, it means that the node is the first node
@@ -49,13 +49,13 @@ func resumeDqlite(nodes []router.Node) *shared.Client {
 		return dqlite.CreateSharedDatabase(nil)
 	}
 
-	return dqlite.CreateSharedDatabase(routerNodesToDqliteAddrPort(nodes))
+	return dqlite.CreateSharedDatabase(routerNodesToDqliteAddr(nodes))
 }
 
-func routerNodesToDqliteAddrPort(nodes []router.Node) *[]string {
+func routerNodesToDqliteAddr(nodes []router.Node) *[]string {
 	addrs := make([]string, len(nodes))
 	for i, node := range nodes {
-		addrs[i] = node.AddrPort.String()
+		addrs[i] = node.Id
 	}
 	return &addrs
 }

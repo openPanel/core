@@ -105,7 +105,7 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 	})
 
 	// no need to test latency with itself
-	linkStates := router.EstimateLatencies(routerNodes[1:])
+	linkStates := router.EstimateLatencies(routerNodes[1:], meta.serverId)
 	log.Infof("Latencies estimated")
 
 	shutdownTempSvr, err := bootTempServer(listenIp, listenPort)

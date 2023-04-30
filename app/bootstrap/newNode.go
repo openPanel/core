@@ -51,6 +51,11 @@ func generateNewNode(ip net.IP, port int) newNodeMeta {
 		log.Panicf("Failed to generate certificate signing request: %v", err)
 	}
 
+	log.Infof("Server ID: %v", serverId)
+	log.Infof("Server public IP: %v", publicIp)
+	log.Infof("Server listen IP: %v", ip)
+	log.Infof("Server port: %v", serverPort)
+
 	return newNodeMeta{
 		serverId:       serverId,
 		serverPublicIp: publicIp,

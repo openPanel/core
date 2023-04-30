@@ -10,7 +10,7 @@ import (
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/tools/ca"
-	"github.com/openPanel/core/app/tools/quicNet"
+	"github.com/openPanel/core/app/tools/quicgrpc"
 )
 
 func StartRpcServiceBlocking() {
@@ -29,13 +29,13 @@ func StartRpcServiceBlocking() {
 		listenAddr = fmt.Sprintf("%s:%d", global.App.NodeInfo.ServerListenIP.String(), global.App.NodeInfo.ServerPort)
 	}
 
-	qle, err := quic.ListenAddrEarly(listenAddr, tlsConfig, constant.QuicConfig)
+	qle, err := quic.ListenAddr(listenAddr, tlsConfig, constant.QuicConfig)
 	if err != nil {
 		log.Panicf("error listening: %v", err)
 	}
-	listener := quicNet.Listen(qle)
+	listener := quicgrpc.Listen(qle)
 
-	if err := grpcServer.Serve(listener); err != nil {
+	if err = grpcServer.Serve(listener); err != nil {
 		log.Panicf("error serving grpc: %v", err)
 	}
 

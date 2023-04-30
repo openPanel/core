@@ -5,4 +5,6 @@ const (
 	RPCDestinationMetadataKey = "X-Destination"
 
 	RPCDefaultSource = "browser"
+
+	RPCProtocolName = "http2 over quic"
 )

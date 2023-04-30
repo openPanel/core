@@ -60,7 +60,7 @@ func SyncNodesAndLinkStates(targets []Target) ([]router.Node, router.LinkStates,
 		return node.Id != global.App.NodeInfo.ServerId
 	})
 
-	lstToOtherNodes := router.EstimateLatencies(otherNodes)
+	lstToOtherNodes := router.EstimateLatencies(otherNodes, global.App.NodeInfo.ServerId)
 
 	// sync link states
 	fullLinkStates, err := client.UpdateLinkState(context.Background(), &pb.UpdateLinkStateRequest{

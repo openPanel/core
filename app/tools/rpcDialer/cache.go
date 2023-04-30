@@ -13,15 +13,20 @@ import (
 var connCache = timedmap.New(time.Minute)
 
 func getClientConnFromCache(remoteAddr string) *grpc.ClientConn {
-	v := connCache.GetValue(remoteAddr).(*grpc.ClientConn)
-	if v != nil {
-		state := v.GetState()
-		if state == connectivity.TransientFailure || state == connectivity.Shutdown {
-			connCache.Remove(remoteAddr)
-			return nil
-		}
+	raw := connCache.GetValue(remoteAddr)
+	if raw == nil {
+		return nil
 	}
-	return v
+
+	conn := raw.(*grpc.ClientConn)
+
+	state := conn.GetState()
+	if state == connectivity.TransientFailure || state == connectivity.Shutdown {
+		connCache.Remove(remoteAddr)
+		return nil
+	}
+
+	return conn
 }
 
 func connCleanCb(conn any) {

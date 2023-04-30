@@ -8,8 +8,11 @@ vars:
   PACKAGE: "github.com/openPanel/core"
   # ldflags
   EXT_LDFLAGS: -fPIC -Wl,-Bstatic -lraft -luv_a -llz4 -ldqlite -Wl,-Bdynamic
+  STATIC_C_EXT_LDFLAGS: -fPIC -static -lraft -luv_a -llz4 -ldqlite
   EXTERNAL_LINK: "-linkmode=external -v -extldflags '{{.EXT_LDFLAGS}}'"
+  EXTERNAL_C_LINK: "-linkmode=external -v -extldflags '{{.STATIC_C_EXT_LDFLAGS}}'"
   STATIC_LDFLAGS: "{{.EXTERNAL_LINK}}"
+  STATIC_C_LDFLAGS: "{{.EXTERNAL_C_LINK}}"
   STATIC_STRIP_LDFLAGS: "{{.EXTERNAL_LINK}} -s -w"
   # gcflags
   GCFLAGS: "all=-N -l"
@@ -43,12 +46,12 @@ tasks:
   build-analysis:
     cmds:
       - >+
-        "go build
+        go build
         -buildmode=pie
         -tags "{{.DEBUG_TAGS}}"
-        -ldflags "{{.STATIC_LDFLAGS}}"
+        -ldflags "{{.STATIC_C_LDFLAGS}}"
         -gcflags "{{.GCFLAGS}}"
-        -o ./bin/openPanel.analysis {{.PACKAGE}}"
+        -o ./bin/openPanel.analysis {{.PACKAGE}}
 
   install_deps:
     cmds:

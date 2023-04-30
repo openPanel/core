@@ -1,11 +1,10 @@
-package quicNet
+package quicgrpc
 
 import (
 	"context"
 	"crypto/tls"
 	"net"
 
-	"github.com/quic-go/quic-go"
 	"google.golang.org/grpc/credentials"
 )
 
@@ -13,15 +12,15 @@ var _ credentials.AuthInfo = (*Info)(nil)
 
 // Info contains the auth information
 type Info struct {
-	quic.Connection
+	conn *Conn
 }
 
-func NewInfo(conn quic.Connection) *Info {
+func NewInfo(conn *Conn) *Info {
 	return &Info{conn}
 }
 
 func (i *Info) AuthType() string {
-	return "qtls"
+	return "quic-tls"
 }
 
 var _ credentials.TransportCredentials = (*Credentials)(nil)
@@ -34,7 +33,7 @@ type Credentials struct {
 	grpcCreds credentials.TransportCredentials
 }
 
-func NewCredentials(tlsConfig *tls.Config) *Credentials {
+func NewCredentials(tlsConfig *tls.Config) credentials.TransportCredentials {
 	grpcCreds := credentials.NewTLS(tlsConfig)
 	return &Credentials{
 		tlsConfig: tlsConfig,
@@ -42,47 +41,45 @@ func NewCredentials(tlsConfig *tls.Config) *Credentials {
 	}
 }
 
-func (c Credentials) ClientHandshake(ctx context.Context, s string, conn net.Conn) (net.Conn, credentials.AuthInfo, error) {
+func (c *Credentials) ClientHandshake(ctx context.Context, s string, conn net.Conn) (net.Conn, credentials.AuthInfo, error) {
 	if co, ok := conn.(*Conn); ok {
 		c.isQuicConnection = true
-		return conn, NewInfo(co.conn), nil
+		return conn, NewInfo(co), nil
 	}
 
 	return c.grpcCreds.ClientHandshake(ctx, s, conn)
 }
 
-func (c Credentials) ServerHandshake(conn net.Conn) (net.Conn, credentials.AuthInfo, error) {
+func (c *Credentials) ServerHandshake(conn net.Conn) (net.Conn, credentials.AuthInfo, error) {
 	if co, ok := conn.(*Conn); ok {
 		c.isQuicConnection = true
-		return conn, NewInfo(co.conn), nil
+		return conn, NewInfo(co), nil
 	}
 
 	return c.grpcCreds.ServerHandshake(conn)
 }
 
-func (c Credentials) Info() credentials.ProtocolInfo {
+func (c *Credentials) Info() credentials.ProtocolInfo {
 	if c.isQuicConnection {
 		return credentials.ProtocolInfo{
-			SecurityProtocol: "qtls",
+			SecurityProtocol: "quic-tls",
 			ServerName:       c.serverName,
-			ProtocolVersion:  "/qtls/0.0.1",
+			ProtocolVersion:  "/quic/1.0.0",
 		}
 	}
 
 	return c.grpcCreds.Info()
 }
 
-func (c Credentials) Clone() credentials.TransportCredentials {
+func (c *Credentials) Clone() credentials.TransportCredentials {
 	return &Credentials{
-		tlsConfig:        c.tlsConfig.Clone(),
-		isQuicConnection: c.isQuicConnection,
-		serverName:       c.serverName,
-		grpcCreds:        c.grpcCreds.Clone(),
+		tlsConfig: c.tlsConfig.Clone(),
+		grpcCreds: c.grpcCreds.Clone(),
 	}
 }
 
 // OverrideServerName deprecated, make golang happy :(
-func (c Credentials) OverrideServerName(s string) error {
+func (c *Credentials) OverrideServerName(s string) error {
 	c.serverName = s
 	return c.grpcCreds.OverrideServerName(s)
 }

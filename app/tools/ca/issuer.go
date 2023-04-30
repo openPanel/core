@@ -49,6 +49,7 @@ func GenerateCertificateSigningRequest(commonName string) (csr []byte, key []byt
 			CommonName:   commonName,
 			Organization: []string{"openPanel"},
 		},
+		DNSNames:           []string{commonName},
 		SignatureAlgorithm: x509.ECDSAWithSHA384,
 	}
 	csr, err = x509.CreateCertificateRequest(rand.Reader, &template, privateKey)
@@ -82,12 +83,14 @@ func SignCsr(caCertBytes, caKeyBytes, csrBytes []byte) ([]byte, error) {
 	}
 
 	template := x509.Certificate{
-		SerialNumber: randSerial,
-		Subject:      csr.Subject,
-		NotBefore:    time.Now(),
-		NotAfter:     caCert.NotAfter,
-		KeyUsage:     x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+		SerialNumber:       randSerial,
+		Subject:            csr.Subject,
+		NotBefore:          time.Now(),
+		NotAfter:           caCert.NotAfter,
+		KeyUsage:           x509.KeyUsageDigitalSignature,
+		DNSNames:           csr.DNSNames,
+		SignatureAlgorithm: csr.SignatureAlgorithm,
+		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 	}
 	cert, err := x509.CreateCertificate(rand.Reader, &template, caCert, csr.PublicKey, caKey)
 	if err != nil {
