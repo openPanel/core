@@ -2,31 +2,30 @@ version: "3"
 
 env:
   CGO_LDFLAGS_ALLOW: "-Wl,-z,now"
-
+  CGO_LDFLAGS: "-O3 -g -Wl,-Bstatic"
 
 vars:
   PACKAGE: "github.com/openPanel/core"
   # ldflags
-  STATIC_LDFLAGS: "linkmode=external -extldflags '-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a'"
-  STATIC_STRIP_LDFLAGS: "linkmode=external -s -w -extldflags '-fno-PIC -static -l:libraft.a -l:liblz4.a -l:libuv_a.a'"
+  EXT_LDFLAGS: -fPIC -Wl,-Bstatic -lraft -luv_a -llz4 -ldqlite -Wl,-Bdynamic
+  EXTERNAL_LINK: "-linkmode=external -v -extldflags '{{.EXT_LDFLAGS}}'"
+  STATIC_LDFLAGS: "{{.EXTERNAL_LINK}}"
+  STATIC_STRIP_LDFLAGS: "{{.EXTERNAL_LINK}} -s -w"
   # gcflags
   GCFLAGS: "all=-N -l"
-  # cgo
-  CC: "ccache gcc"
-  CXX: "ccache g++"
   # tags
   STATIC_TAGS: "osusergo netgo static_build"
   URFAVE_CLI_TAGS: "urfave_cli_no_docs"
   SQLITE_TAGS: "sqlite_omit_load_extension sqlite_foreign_keys"
   RELEASE_TAGS: "release {{.STATIC_TAGS}} {{.URFAVE_CLI_TAGS}} {{.SQLITE_TAGS}}"
-  DEBUG_TAGS: "{{.URFAVE_CLI_TAGS}} {{.SQLITE_TAGS}}"
-  ANALYSIS_TAGS: "{{.STATIC_TAGS}} {{.DEBUG_TAGS}}"
+  DEBUG_TAGS: "{{.URFAVE_CLI_TAGS}} {{.STATIC_TAGS}} {{.SQLITE_TAGS}}"
 
 tasks:
   build-release:
     cmds:
       - >+
         go build
+        -buildmode=pie
         -tags "{{.RELEASE_TAGS}}"
         -trimpath 
         -ldflags "{{.STATIC_STRIP_LDFLAGS}}"
@@ -36,6 +35,7 @@ tasks:
     cmds:
       - >+
         go build
+        -buildmode=pie
         -tags "{{.DEBUG_TAGS}}"
         -ldflags "{{.STATIC_LDFLAGS}}"
         -o ./bin/openPanel.debug {{.PACKAGE}}
@@ -44,7 +44,8 @@ tasks:
     cmds:
       - >+
         "go build
-        -tags "{{.ANALYSIS_TAGS}}"
+        -buildmode=pie
+        -tags "{{.DEBUG_TAGS}}"
         -ldflags "{{.STATIC_LDFLAGS}}"
         -gcflags "{{.GCFLAGS}}"
         -o ./bin/openPanel.analysis {{.PACKAGE}}"
@@ -54,7 +55,7 @@ tasks:
       - "if [ -z $CI ]; then echo 'Not running in CI, exiting'; exit 1; fi"
       - "sudo add-apt-repository ppa:dqlite/dev"
       - "sudo apt-get update"
-      - "sudo apt install -y liblz4-dev liblz4-tool libuv1-dev libsqlite3-dev"
+      - "sudo apt install -y liblz4-dev liblz4-tool libuv1-dev libsqlite3-dev musl-tools"
 
   gen_grpc:
     cmds:
