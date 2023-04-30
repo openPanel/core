@@ -23,7 +23,7 @@ func init() {
 	}
 }
 
-func Load(key constant.Key, value any, store constant.Store) error {
+func Load(key constant.ConfigKey, value any, store constant.Store) error {
 	var v string
 	var err error
 
@@ -46,7 +46,7 @@ func Load(key constant.Key, value any, store constant.Store) error {
 	return err
 }
 
-func Save(key constant.Key, value any, store constant.Store) error {
+func Save(key constant.ConfigKey, value any, store constant.Store) error {
 	v, err := json.Marshal(value)
 	if err != nil {
 		return err

@@ -11,6 +11,7 @@ import (
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/router"
+	"github.com/openPanel/core/app/tools/convert"
 	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
@@ -61,12 +62,12 @@ var _ BroadcastHandler = linkStateChange
 var _ BroadcastHandler = nodeChange
 
 func linkStateChange(_ context.Context, payload string) error {
-	var lst = new(router.LinkStates)
+	var lst = new([]*pb.LinkState)
 	err := json.Unmarshal([]byte(payload), lst)
 	if err != nil {
 		return errors.Wrap(err, "unmarshal link state failed")
 	}
-	router.UpdateLinkStates(*lst)
+	router.UpdateLinkStates(convert.LinkStatesPbToRouter(*lst))
 	log.Debugf("link state change: %s", payload)
 	return nil
 }

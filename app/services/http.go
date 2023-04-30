@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/openPanel/core/app/bootstrap/clean"
+	"github.com/openPanel/core/app/config"
 	"github.com/openPanel/core/app/constant"
-	"github.com/openPanel/core/app/db/repo/shared"
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
@@ -81,14 +81,17 @@ func wrapGrpcGatewayMux(mux *runtime.ServeMux) http.Handler {
 				return
 			}
 
-			authedToken, err := shared.KVRepo.Get(context.Background(), string(constant.ConfigKeyAuthorizationToken))
+			var authToken string
+			err := config.Load(constant.ConfigKeyAuthorizationToken, &authToken, constant.SharedStore)
 			if err != nil {
 				log.Errorf("error getting auth token: %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 
-			if authedToken != sentToken {
+			if authToken != sentToken {
+				// FIXME: remove debug log
+				log.Debugf("invalid auth token: %s, expected: %s", sentToken, authToken)
 				w.WriteHeader(http.StatusUnauthorized)
 				_, _ = w.Write([]byte("invalid auth token"))
 				return

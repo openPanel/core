@@ -84,11 +84,6 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 		return nil, err
 	}
 
-	err = NodeRepo.AddNode(ctx, request.ServerID, request.Ip, int(request.Port))
-	if err != nil {
-		return nil, err
-	}
-
 	lstFromNewNode := convert.LinkStatesPbToRouter(request.LinkStates)
 	lstToNewNode, err := collectLatencies(ctx, request.Ip, int(request.Port), request.ServerID)
 	if err != nil {
@@ -99,18 +94,22 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 
 	fullLst := router.GetLinkStates()
 
-	broadcastPayload, err := json.Marshal(router.GetLinkStates())
+	broadcastPayload, err := json.Marshal(convert.LinkStatesRouterToPb(fullLst))
 	if err != nil {
 		log.Errorf("failed to marshal link states: %v", err)
 		return nil, err
 	}
 
 	err = rpc.Broadcast([]rpc.BroadcastMessage{{
-		Type: pb.BroadcastType_NOTIFY_NODE_CHANGE,
-	}, {
 		Type:    pb.BroadcastType_NOTIFY_LINK_STATE_CHANGE,
 		Payload: string(broadcastPayload),
 	}})
+	if err != nil {
+		return nil, err
+	}
+
+	// we have to add node after we update link states, because we can not connect to new node at this time
+	err = NodeRepo.AddNode(ctx, request.ServerID, request.Ip, int(request.Port))
 	if err != nil {
 		return nil, err
 	}

@@ -108,6 +108,12 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 	linkStates := router.EstimateLatencies(routerNodes[1:])
 	log.Infof("Latencies estimated")
 
+	shutdownTempSvr, err := bootTempServer(listenIp, listenPort)
+	if err != nil {
+		log.Infof("Failed to boot temp server: %v", err)
+		return
+	}
+
 	registerInfo, err := http.RegisterNewNode(
 		target,
 		meta.serverPublicIp,
@@ -119,6 +125,8 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 	if err != nil {
 		log.Panicf("Failed to register: %v", err)
 	}
+
+	shutdownTempSvr()
 
 	global.App.NodeInfo = global.NodeInfo{
 		ServerId:         meta.serverId,
@@ -183,10 +191,12 @@ func Resume() {
 			})
 		}
 
+		shutdownTempSvr, err := bootTempServer(global.App.NodeInfo.ServerListenIP, global.App.NodeInfo.ServerPort)
 		nodes, lst, err := rpc.SyncNodesAndLinkStates(targets)
 		if err != nil {
 			log.Panicf("Failed to update router info: %v", err)
 		}
+		shutdownTempSvr()
 
 		router.SetNodes(nodes)
 		router.UpdateLinkStates(lst)

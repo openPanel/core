@@ -14,16 +14,16 @@ const (
 	SharedStore Store = iota
 )
 
-type Key string
+type ConfigKey string
 
 const (
-	ConfigKeyNodeInfo   Key = "local.nodeInfo"
-	ConfigKeyNodesCache Key = "local.nodesCache"
+	ConfigKeyNodeInfo   ConfigKey = "local.nodeInfo"
+	ConfigKeyNodesCache ConfigKey = "local.nodesCache"
 )
 
 const ProtoMixinIdStart = 536870900
 
 const (
-	ConfigKeyClusterInfo        Key = "shared.clusterInfo"
-	ConfigKeyAuthorizationToken Key = "shared.authorizationToken"
+	ConfigKeyClusterInfo        ConfigKey = "shared.clusterInfo"
+	ConfigKeyAuthorizationToken ConfigKey = "shared.authorizationToken"
 )

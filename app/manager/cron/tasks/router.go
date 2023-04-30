@@ -18,7 +18,7 @@ func EstimateAndBroadcastLinkState() {
 	linkStates := convert.LinkStatesRouterToPb(router.GetLinkStates())
 	broadcastPayload, err := json.Marshal(linkStates)
 	if err != nil {
-		log.Errorf("cron: failed to marshal link state: %v", err)
+		log.Errorf("cron: failed to marshal link states: %v", err)
 		return
 	}
 
