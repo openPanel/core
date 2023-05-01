@@ -1,3 +1,5 @@
+// use cached grpc client connection will result to context pollution
+// re-enable this when the issue is fixed
 package rpcDialer
 
 import (

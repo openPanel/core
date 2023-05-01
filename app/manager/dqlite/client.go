@@ -9,21 +9,22 @@ import (
 var _ net.Conn = (*ClientRpcConn)(nil)
 
 type ClientRpcConn struct {
-	rpcConn
+	*RpcConn
 }
 
 func (c *ClientRpcConn) Close() error {
 	c.writeLock.Lock()
 	defer c.writeLock.Unlock()
-	return c.stream.(grpc.ClientStream).CloseSend()
+	err := c.stream.(grpc.ClientStream).CloseSend()
+	c.cancel()
+	return err
 }
 
 func NewClientRpcConn(stream grpc.ClientStream, src, dst string) *ClientRpcConn {
 	return &ClientRpcConn{
-		rpcConn{
-			localAddr:  NewRPCConnAddr(src),
-			remoteAddr: NewRPCConnAddr(dst),
-			stream:     stream,
-		},
+		RpcConn: NewRPCConn(
+			NewRPCConnAddr(src),
+			NewRPCConnAddr(dst),
+			stream),
 	}
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global"
+	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/tools/rpcDialer"
 )
 
@@ -18,15 +19,19 @@ func DialFunction(ctx context.Context, address string) (net.Conn, error) {
 
 	conn, err := rpcDialer.DialWithServerId(address)
 	if err != nil {
+		log.Debugf("dial dqlite err: %v", err)
 		return nil, err
 	}
+	log.Debugf("dial dqlite: %v -> %v", global.App.NodeInfo.ServerId, address)
 
 	client := pb.NewDqliteConnectionClient(conn)
 
-	stream, err := client.Connect(ctx)
+	stream, err := client.ServeDqlite(ctx)
 	if err != nil {
+		log.Debugf("dial dqlite err: %v", err)
 		return nil, err
 	}
+	log.Debugf("rpc conn created: %v -> %v", global.App.NodeInfo.ServerId, address)
 	return NewClientRpcConn(stream, global.App.NodeInfo.ServerId, address), nil
 }
 

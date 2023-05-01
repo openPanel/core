@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/quic-go/quic-go"
+
+	"github.com/openPanel/core/app/global/log"
 )
 
 var _ net.Conn = (*Conn)(nil)
@@ -18,8 +20,10 @@ type Conn struct {
 func NewConn(conn quic.Connection) (net.Conn, error) {
 	stream, err := conn.OpenStreamSync(context.Background())
 	if err != nil {
+		log.Debugf("quic open stream error: %v", err)
 		return nil, err
 	}
+	log.Debugf("quic open stream success")
 	return &Conn{
 		conn:   conn,
 		stream: stream,

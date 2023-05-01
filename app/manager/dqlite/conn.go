@@ -2,11 +2,13 @@ package dqlite
 
 import (
 	"context"
+	"io"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/openPanel/core/app/generated/pb"
+	"github.com/openPanel/core/app/global/log"
 )
 
 // Stream grpc deprecate it, just use as a placeholder
@@ -16,7 +18,9 @@ type Stream interface {
 	RecvMsg(m any) error
 }
 
-type rpcConn struct {
+var _ io.ReadWriter = (*RpcConn)(nil)
+
+type RpcConn struct {
 	localAddr  RPCConnAddr
 	remoteAddr RPCConnAddr
 
@@ -24,49 +28,82 @@ type rpcConn struct {
 	writeLock sync.Mutex
 
 	stream Stream
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
-func (r *rpcConn) Read(b []byte) (n int, err error) {
+func NewRPCConn(localAddr, remoteAddr RPCConnAddr, stream Stream) *RpcConn {
+	ctx, cancel := context.WithCancel(context.Background())
+	conn := &RpcConn{
+		localAddr:  localAddr,
+		remoteAddr: remoteAddr,
+		stream:     stream,
+		ctx:        ctx,
+		cancel:     cancel,
+	}
+
+	return conn
+}
+
+func (r *RpcConn) Context() context.Context {
+	return r.ctx
+}
+
+func (r *RpcConn) Read(b []byte) (n int, err error) {
+	log.Debugf("rpcConn.Read start")
 	r.readLock.Lock()
 	defer r.readLock.Unlock()
 
 	resp := &pb.DqliteData{}
 	err = r.stream.RecvMsg(resp)
 	if err != nil {
+		if err == io.EOF {
+			r.cancel()
+		}
+
+		log.Debugf("rpcConn.Read: %v", err)
 		return 0, err
 	}
+	log.Debugf("rpcConn.Read: %v", resp.Data)
 
 	return copy(b, resp.Data), nil
 }
 
-func (r *rpcConn) Write(b []byte) (n int, err error) {
+func (r *RpcConn) Write(b []byte) (n int, err error) {
+	log.Debugf("rpcConn.Write start")
 	r.writeLock.Lock()
 	defer r.writeLock.Unlock()
 
-	err = r.stream.SendMsg(&pb.DqliteData{Data: b})
+	buf := make([]byte, len(b))
+	copy(buf, b)
+
+	err = r.stream.SendMsg(&pb.DqliteData{Data: buf})
 	if err != nil {
+		log.Debugf("rpcConn.Write: %v", err)
 		return 0, err
 	}
+	log.Debugf("rpcConn.Write: %v", b)
 
 	return len(b), nil
 }
 
-func (r *rpcConn) LocalAddr() net.Addr {
+func (r *RpcConn) LocalAddr() net.Addr {
 	return r.localAddr
 }
 
-func (r *rpcConn) RemoteAddr() net.Addr {
+func (r *RpcConn) RemoteAddr() net.Addr {
 	return r.remoteAddr
 }
 
-func (r *rpcConn) SetDeadline(t time.Time) error {
+func (r *RpcConn) SetDeadline(t time.Time) error {
 	return nil
 }
 
-func (r *rpcConn) SetReadDeadline(t time.Time) error {
+func (r *RpcConn) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
-func (r *rpcConn) SetWriteDeadline(t time.Time) error {
+func (r *RpcConn) SetWriteDeadline(t time.Time) error {
 	return nil
 }

@@ -19,14 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	DqliteConnection_Connect_FullMethodName = "/dqlite.DqliteConnection/Connect"
+	DqliteConnection_ServeDqlite_FullMethodName = "/dqlite.DqliteConnection/ServeDqlite"
 )
 
 // DqliteConnectionClient is the client API for DqliteConnection service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DqliteConnectionClient interface {
-	Connect(ctx context.Context, opts ...grpc.CallOption) (DqliteConnection_ConnectClient, error)
+	ServeDqlite(ctx context.Context, opts ...grpc.CallOption) (DqliteConnection_ServeDqliteClient, error)
 }
 
 type dqliteConnectionClient struct {
@@ -37,30 +37,30 @@ func NewDqliteConnectionClient(cc grpc.ClientConnInterface) DqliteConnectionClie
 	return &dqliteConnectionClient{cc}
 }
 
-func (c *dqliteConnectionClient) Connect(ctx context.Context, opts ...grpc.CallOption) (DqliteConnection_ConnectClient, error) {
-	stream, err := c.cc.NewStream(ctx, &DqliteConnection_ServiceDesc.Streams[0], DqliteConnection_Connect_FullMethodName, opts...)
+func (c *dqliteConnectionClient) ServeDqlite(ctx context.Context, opts ...grpc.CallOption) (DqliteConnection_ServeDqliteClient, error) {
+	stream, err := c.cc.NewStream(ctx, &DqliteConnection_ServiceDesc.Streams[0], DqliteConnection_ServeDqlite_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &dqliteConnectionConnectClient{stream}
+	x := &dqliteConnectionServeDqliteClient{stream}
 	return x, nil
 }
 
-type DqliteConnection_ConnectClient interface {
+type DqliteConnection_ServeDqliteClient interface {
 	Send(*DqliteData) error
 	Recv() (*DqliteData, error)
 	grpc.ClientStream
 }
 
-type dqliteConnectionConnectClient struct {
+type dqliteConnectionServeDqliteClient struct {
 	grpc.ClientStream
 }
 
-func (x *dqliteConnectionConnectClient) Send(m *DqliteData) error {
+func (x *dqliteConnectionServeDqliteClient) Send(m *DqliteData) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *dqliteConnectionConnectClient) Recv() (*DqliteData, error) {
+func (x *dqliteConnectionServeDqliteClient) Recv() (*DqliteData, error) {
 	m := new(DqliteData)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -72,15 +72,15 @@ func (x *dqliteConnectionConnectClient) Recv() (*DqliteData, error) {
 // All implementations should embed UnimplementedDqliteConnectionServer
 // for forward compatibility
 type DqliteConnectionServer interface {
-	Connect(DqliteConnection_ConnectServer) error
+	ServeDqlite(DqliteConnection_ServeDqliteServer) error
 }
 
 // UnimplementedDqliteConnectionServer should be embedded to have forward compatible implementations.
 type UnimplementedDqliteConnectionServer struct {
 }
 
-func (UnimplementedDqliteConnectionServer) Connect(DqliteConnection_ConnectServer) error {
-	return status.Errorf(codes.Unimplemented, "method Connect not implemented")
+func (UnimplementedDqliteConnectionServer) ServeDqlite(DqliteConnection_ServeDqliteServer) error {
+	return status.Errorf(codes.Unimplemented, "method ServeDqlite not implemented")
 }
 
 // UnsafeDqliteConnectionServer may be embedded to opt out of forward compatibility for this service.
@@ -94,25 +94,25 @@ func RegisterDqliteConnectionServer(s grpc.ServiceRegistrar, srv DqliteConnectio
 	s.RegisterService(&DqliteConnection_ServiceDesc, srv)
 }
 
-func _DqliteConnection_Connect_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(DqliteConnectionServer).Connect(&dqliteConnectionConnectServer{stream})
+func _DqliteConnection_ServeDqlite_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(DqliteConnectionServer).ServeDqlite(&dqliteConnectionServeDqliteServer{stream})
 }
 
-type DqliteConnection_ConnectServer interface {
+type DqliteConnection_ServeDqliteServer interface {
 	Send(*DqliteData) error
 	Recv() (*DqliteData, error)
 	grpc.ServerStream
 }
 
-type dqliteConnectionConnectServer struct {
+type dqliteConnectionServeDqliteServer struct {
 	grpc.ServerStream
 }
 
-func (x *dqliteConnectionConnectServer) Send(m *DqliteData) error {
+func (x *dqliteConnectionServeDqliteServer) Send(m *DqliteData) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *dqliteConnectionConnectServer) Recv() (*DqliteData, error) {
+func (x *dqliteConnectionServeDqliteServer) Recv() (*DqliteData, error) {
 	m := new(DqliteData)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -129,8 +129,8 @@ var DqliteConnection_ServiceDesc = grpc.ServiceDesc{
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Connect",
-			Handler:       _DqliteConnection_Connect_Handler,
+			StreamName:    "ServeDqlite",
+			Handler:       _DqliteConnection_ServeDqlite_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

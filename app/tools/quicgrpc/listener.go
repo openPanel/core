@@ -26,7 +26,7 @@ func Listen(ql quic.Listener) net.Listener {
 
 	listener := &Listener{
 		ql,
-		make(chan *Conn, 100),
+		make(chan *Conn, 2),
 		cancel,
 		ctx,
 	}
@@ -37,9 +37,12 @@ func Listen(ql quic.Listener) net.Listener {
 }
 
 func (l *Listener) tryAccept() {
+	log.Debugf("quic listener try accept loop start")
+
 	for {
 		select {
 		case <-l.ctx.Done():
+			log.Debugf("quic listener closed")
 			return
 		default:
 			conn, err := l.ql.Accept(context.Background())
@@ -67,10 +70,13 @@ func (l *Listener) Accept() (net.Conn, error) {
 	if !ok {
 		return nil, net.ErrClosed
 	}
+	log.Debugf("quic accept from conn queue")
 	return conn, nil
 }
 
 func (l *Listener) Close() error {
+	log.Debugf("quic listener closing")
+
 	l.cancel()
 	close(l.connQueue)
 	return l.ql.Close()
@@ -81,11 +87,13 @@ func (l *Listener) Addr() net.Addr {
 }
 
 func NewQuicDialer(tlsConf *tls.Config) func(context.Context, string) (net.Conn, error) {
+	// TODO: cache quic connection, only accept new stream if connection is alive
 	return func(ctx context.Context, s string) (net.Conn, error) {
 		conn, err := quic.DialAddrContext(ctx, s, tlsConf, constant.QuicConfig)
 		if err != nil {
 			return nil, err
 		}
+		log.Debugf("quic dial: %s", s)
 		return NewConn(conn)
 	}
 }

@@ -12,11 +12,6 @@ import (
 )
 
 func DialWithAddress(address, target string) (*grpc.ClientConn, error) {
-	cachedConn := getClientConnFromCache(target)
-	if cachedConn != nil {
-		return cachedConn, nil
-	}
-
 	tlsConfig, err := ca.GenerateRPCTLSConfig(
 		global.App.NodeInfo.ServerCert,
 		global.App.NodeInfo.ServerPrivateKey,
@@ -43,8 +38,6 @@ func DialWithAddress(address, target string) (*grpc.ClientConn, error) {
 		log.Warnf("error dialing:%s %v", address, err)
 		return nil, err
 	}
-
-	saveClientConnToCache(target, conn)
 
 	return conn, nil
 }

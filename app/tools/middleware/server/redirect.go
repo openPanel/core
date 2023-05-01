@@ -3,10 +3,11 @@ package server
 import (
 	"context"
 
-	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/openPanel/core/app/global"
+	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/tools/rpcDialer"
 )
 
@@ -48,17 +49,23 @@ func serverRedirectStreamInterceptor(
 	info *grpc.StreamServerInfo,
 	handler grpc.StreamHandler,
 ) error {
+	log.Debugf("redirect interceptor called: %v", info.FullMethod)
+
 	dst, err := getDstFromContext(ss.Context())
 	if err != nil {
+		log.Debugf("redirect err: %v", err)
 		return err
 	}
 
 	if dst == global.App.NodeInfo.ServerId {
+		log.Debugf("redirect dst is self")
 		return handler(srv, ss)
 	}
+	log.Debugf("redirect dst: %v", dst)
 
 	conn, err := rpcDialer.DialWithServerId(dst)
 	if err != nil {
+		log.Debugf("redirect err: %v", err)
 		return err
 	}
 
@@ -67,54 +74,45 @@ func serverRedirectStreamInterceptor(
 		ServerStreams: info.IsServerStream,
 	}
 
-	stream, err := conn.NewStream(ss.Context(), desc, info.FullMethod)
+	stream, err := conn.NewStream(context.Background(), desc, info.FullMethod)
 	if err != nil {
+		log.Debugf("redirect err: %v", err)
 		return err
 	}
+	log.Debugf("redirect stream created")
 
-	if info.IsServerStream {
-		go func() {
-			for {
-				m := getDataInstanceFromTransferFn(ss.RecvMsg)
-				err := stream.RecvMsg(m)
-				if err != nil {
-					break
-				}
-				err = ss.SendMsg(m)
-				if err != nil {
-					break
-				}
-			}
-		}()
-	}
-
-	if info.IsClientStream {
-		go func() {
-			for {
-				m := getDataInstanceFromTransferFn(stream.RecvMsg)
-				err := ss.RecvMsg(m)
-				if err != nil {
-					break
-				}
-				err = stream.SendMsg(m)
-				if err != nil {
-					break
-				}
-			}
-		}()
-	}
-
-	defer func(conn *grpc.ClientConn) {
-		_ = stream.CloseSend()
-		_ = conn.Close()
-	}(conn)
-
-	for {
-		select {
-		case <-ss.Context().Done():
-			return ss.Context().Err()
-		case <-stream.Context().Done():
-			return errors.New("upstream conn closed")
-		}
-	}
+	return handler(srv, &redirectServerStream{stream})
 }
+
+var _ grpc.ServerStream = (*redirectServerStream)(nil)
+
+type redirectServerStream struct {
+	stream grpc.ClientStream
+}
+
+func (r *redirectServerStream) SetHeader(_ metadata.MD) error {
+	return nil
+}
+
+func (r *redirectServerStream) SendHeader(_ metadata.MD) error {
+	return nil
+}
+
+func (r *redirectServerStream) SetTrailer(_ metadata.MD) {
+}
+
+func (r *redirectServerStream) Context() context.Context {
+	return r.stream.Context()
+}
+
+func (r *redirectServerStream) SendMsg(m interface{}) error {
+	log.Debugf("SendMsg: %v", m)
+	return r.stream.SendMsg(m)
+}
+
+func (r *redirectServerStream) RecvMsg(m interface{}) error {
+	log.Debugf("RecvMsg: %v", m)
+	return r.stream.RecvMsg(m)
+}
+
+var _ grpc.ServerStream = (*redirectServerStream)(nil)

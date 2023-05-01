@@ -6,5 +6,5 @@ message DqliteData {
 }
 
 service DqliteConnection {
-  rpc Connect(stream DqliteData) returns (stream DqliteData);
+  rpc ServeDqlite(stream DqliteData) returns (stream DqliteData);
 }
