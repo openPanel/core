@@ -124,7 +124,7 @@ func filterRouterInfos(id string) {
 	}
 }
 
-func UpdateLinkStates(infos ...LinkStates) {
+func MergeLinkStates(infos ...LinkStates) {
 	lsLock.Lock()
 
 	for _, info := range infos {
@@ -165,6 +165,8 @@ func updateRouterDecision() {
 		// dijkstra needs info of all nodes
 		dijkstraRouteAlgorithm()
 	}
+
+	log.Debugf("router decisions: %v", routerDecisions)
 }
 
 func GetHop(id string) (netip.AddrPort, error) {
@@ -172,7 +174,7 @@ func GetHop(id string) (netip.AddrPort, error) {
 	defer rdLock.RUnlock()
 	addr, ok := routerDecisions[id]
 	if !ok {
-		log.Debugf("no route to %s, %v", id, linkStates)
+		log.Debugf("no route to %s, %v", id, routerDecisions)
 		return netip.AddrPort{}, errors.New(fmt.Sprintf("no route to %s", id))
 	}
 	return addr, nil

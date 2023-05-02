@@ -2,17 +2,12 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/openPanel/core/app/db/repo/shared"
 	"github.com/openPanel/core/app/generated/pb"
-	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/router"
-	"github.com/openPanel/core/app/tools/convert"
-	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
 var BroadcastService pb.BroadcastServiceServer = new(broadcastService)
@@ -55,37 +50,10 @@ type BroadcastHandler func(ctx context.Context, payload string) error
 
 var broadcastHandler = map[pb.BroadcastType]BroadcastHandler{
 	pb.BroadcastType_NOTIFY_LINK_STATE_CHANGE: linkStateChange,
-	pb.BroadcastType_NOTIFY_NODE_CHANGE:       nodeChange,
 }
 
 var _ BroadcastHandler = linkStateChange
-var _ BroadcastHandler = nodeChange
 
 func linkStateChange(_ context.Context, payload string) error {
-	var lst = new([]*pb.LinkState)
-	err := json.Unmarshal([]byte(payload), lst)
-	if err != nil {
-		return errors.Wrap(err, "unmarshal link state failed")
-	}
-	router.UpdateLinkStates(convert.LinkStatesPbToRouter(*lst))
-	log.Debugf("link state change: %s", payload)
-	return nil
-}
-
-func nodeChange(ctx context.Context, _ string) error {
-	nodes, err := shared.NodeRepo.GetAll(ctx)
-	if err != nil {
-		return errors.Wrapf(err, "get all nodes failed")
-	}
-
-	routerNodes := make([]router.Node, len(nodes))
-	for i, node := range nodes {
-		routerNodes[i] = router.Node{
-			Id:       node.ID,
-			AddrPort: netUtils.NewAddrPortWithString(node.IP, node.Port),
-		}
-	}
-	router.SetNodes(routerNodes)
-	log.Debugf("node change: %s", nodes)
-	return nil
+	return router.LoadBroadcastPayload([]byte(payload))
 }

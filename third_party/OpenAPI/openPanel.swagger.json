@@ -129,11 +129,10 @@
     "openPanelBroadcastType": {
       "type": "string",
       "enum": [
-        "NOTIFY_NODE_CHANGE",
         "NOTIFY_LINK_STATE_CHANGE"
       ],
-      "default": "NOTIFY_NODE_CHANGE",
-      "title": "- NOTIFY_NODE_CHANGE: payload is empty, should directly load from dqlite\n - NOTIFY_LINK_STATE_CHANGE: payload include router.LinkStates in json format"
+      "default": "NOTIFY_LINK_STATE_CHANGE",
+      "title": "- NOTIFY_LINK_STATE_CHANGE: payload include router.LinkStates in json format"
     },
     "openPanelEstimateLatencyResponse": {
       "type": "object",

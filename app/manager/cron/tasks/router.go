@@ -13,7 +13,7 @@ import (
 func EstimateAndBroadcastLinkState() {
 	infos := router.EstimateAndStoreLatencies()
 
-	router.UpdateLinkStates(infos)
+	router.MergeLinkStates(infos)
 
 	linkStates := convert.LinkStatesRouterToPb(router.GetLinkStates())
 	broadcastPayload, err := json.Marshal(linkStates)

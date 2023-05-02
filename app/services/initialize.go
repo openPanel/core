@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"net/netip"
 	"sync"
 
@@ -32,11 +31,11 @@ func (s *initializeService) UpdateLinkState(ctx context.Context, request *pb.Upd
 		return nil, err
 	}
 
-	router.UpdateLinkStates(lstFromNewNode, lstToNewNode)
+	router.MergeLinkStates(lstFromNewNode, lstToNewNode)
 
 	fullLst := router.GetLinkStates()
 
-	broadcastPayload, err := json.Marshal(router.GetLinkStates())
+	broadcastPayload, err := router.GetBroadcastPayload()
 	if err != nil {
 		return nil, err
 	}
@@ -90,19 +89,19 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 		return nil, err
 	}
 
-	router.UpdateLinkStates(lstFromNewNode, lstToNewNode)
+	router.AddNodes([]router.Node{{
+		Id:       request.ServerID,
+		AddrPort: netUtils.NewAddrPortWithString(request.Ip, int(request.Port)),
+	}})
+	router.MergeLinkStates(lstFromNewNode, lstToNewNode)
 
-	fullLst := router.GetLinkStates()
-
-	broadcastPayload, err := json.Marshal(convert.LinkStatesRouterToPb(fullLst))
+	payload, err := router.GetBroadcastPayload()
 	if err != nil {
-		log.Errorf("failed to marshal link states: %v", err)
 		return nil, err
 	}
-
 	err = rpc.Broadcast([]rpc.BroadcastMessage{{
 		Type:    pb.BroadcastType_NOTIFY_LINK_STATE_CHANGE,
-		Payload: string(broadcastPayload),
+		Payload: string(payload),
 	}})
 	if err != nil {
 		return nil, err
@@ -117,7 +116,7 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 	return &pb.RegisterResponse{
 		ClusterCACert: global.App.NodeInfo.ClusterCaCert,
 		ClientCert:    clientCert,
-		LinkStates:    convert.LinkStatesRouterToPb(fullLst),
+		LinkStates:    convert.LinkStatesRouterToPb(router.GetLinkStates()),
 	}, nil
 }
 

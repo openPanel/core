@@ -143,7 +143,7 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 		log.Panicf("Failed to save node info: %v", err)
 	}
 
-	router.UpdateLinkStates(convert.LinkStatesPbToRouter(registerInfo.LinkStates))
+	router.MergeLinkStates(convert.LinkStatesPbToRouter(registerInfo.LinkStates))
 
 	global.App.DbShared = dqliteJoin(routerNodes[1:])
 	global.App.ClusterInfo, err = config.LoadClusterInfo()
@@ -199,7 +199,7 @@ func Resume() {
 		shutdownTempSvr()
 
 		router.SetNodes(nodes)
-		router.UpdateLinkStates(lst)
+		router.MergeLinkStates(lst)
 
 		global.App.DbShared = resumeDqlite(nodes)
 	} else {

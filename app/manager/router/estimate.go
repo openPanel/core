@@ -50,7 +50,7 @@ func EstimateAndStoreLatencies() LinkStates {
 
 	infos := EstimateLatencies(filteredNodes, global.App.NodeInfo.ServerId)
 
-	UpdateLinkStates(infos)
+	MergeLinkStates(infos)
 
 	return infos
 }
