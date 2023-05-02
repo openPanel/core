@@ -10,7 +10,8 @@ import (
 	"github.com/openPanel/core/app/tools/rpcDialer"
 )
 
-func DialFunction(ctx context.Context, address string) (net.Conn, error) {
+// DialFunction ctx used to control first connect timeout, just ignore
+func DialFunction(_ context.Context, address string) (net.Conn, error) {
 	if address == global.App.NodeInfo.ServerId {
 		server, client := net.Pipe()
 		AcceptChan <- client
@@ -26,7 +27,7 @@ func DialFunction(ctx context.Context, address string) (net.Conn, error) {
 
 	client := pb.NewDqliteConnectionClient(conn)
 
-	stream, err := client.ServeDqlite(ctx)
+	stream, err := client.ServeDqlite(context.Background())
 	if err != nil {
 		log.Debugf("dial dqlite err: %v", err)
 		return nil, err

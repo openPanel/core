@@ -13,8 +13,6 @@ type ClientRpcConn struct {
 }
 
 func (c *ClientRpcConn) Close() error {
-	c.writeLock.Lock()
-	defer c.writeLock.Unlock()
 	err := c.stream.(grpc.ClientStream).CloseSend()
 	c.cancel()
 	return err

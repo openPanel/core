@@ -1,14 +1,13 @@
 package dqlite
 
 import (
+	"bufio"
 	"context"
 	"io"
 	"net"
-	"sync"
 	"time"
 
 	"github.com/openPanel/core/app/generated/pb"
-	"github.com/openPanel/core/app/global/log"
 )
 
 // Stream grpc deprecate it, just use as a placeholder
@@ -24,13 +23,17 @@ type RpcConn struct {
 	localAddr  RPCConnAddr
 	remoteAddr RPCConnAddr
 
-	readLock  sync.Mutex
-	writeLock sync.Mutex
-
 	stream Stream
+
+	readBuf *bufio.Reader
 
 	ctx    context.Context
 	cancel context.CancelFunc
+}
+
+func (r *RpcConn) Read(p []byte) (n int, err error) {
+	n, err = r.readBuf.Read(p)
+	return
 }
 
 func NewRPCConn(localAddr, remoteAddr RPCConnAddr, stream Stream) *RpcConn {
@@ -41,6 +44,11 @@ func NewRPCConn(localAddr, remoteAddr RPCConnAddr, stream Stream) *RpcConn {
 		stream:     stream,
 		ctx:        ctx,
 		cancel:     cancel,
+		readBuf: bufio.NewReader(
+			&grpcReader{
+				receive: stream.RecvMsg,
+			},
+		),
 	}
 
 	return conn
@@ -50,41 +58,28 @@ func (r *RpcConn) Context() context.Context {
 	return r.ctx
 }
 
-func (r *RpcConn) Read(b []byte) (n int, err error) {
-	log.Debugf("rpcConn.Read start")
-	r.readLock.Lock()
-	defer r.readLock.Unlock()
+type grpcReader struct {
+	receive func(m any) error
+}
 
+func (r *grpcReader) Read(b []byte) (n int, err error) {
 	resp := &pb.DqliteData{}
-	err = r.stream.RecvMsg(resp)
+	err = r.receive(resp)
 	if err != nil {
-		if err == io.EOF {
-			r.cancel()
-		}
-
-		log.Debugf("rpcConn.Read: %v", err)
 		return 0, err
 	}
-	log.Debugf("rpcConn.Read: %v", resp.Data)
 
 	return copy(b, resp.Data), nil
 }
 
 func (r *RpcConn) Write(b []byte) (n int, err error) {
-	log.Debugf("rpcConn.Write start")
-	r.writeLock.Lock()
-	defer r.writeLock.Unlock()
-
 	buf := make([]byte, len(b))
 	copy(buf, b)
 
 	err = r.stream.SendMsg(&pb.DqliteData{Data: buf})
 	if err != nil {
-		log.Debugf("rpcConn.Write: %v", err)
 		return 0, err
 	}
-	log.Debugf("rpcConn.Write: %v", b)
-
 	return len(b), nil
 }
 

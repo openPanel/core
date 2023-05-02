@@ -1,12 +1,14 @@
 package router
 
 import (
+	"fmt"
 	"net"
 	"net/netip"
 	"sync"
 
 	"github.com/pkg/errors"
 
+	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
@@ -72,7 +74,7 @@ func SetNodes(ns []Node) {
 		NodePersistence(flattenNodes())
 	}
 
-	filterRouterInfos("")
+	// filterRouterInfos("")
 }
 
 func DeleteNode(id string) {
@@ -84,7 +86,7 @@ func DeleteNode(id string) {
 		NodePersistence(flattenNodes())
 	}
 
-	filterRouterInfos(id)
+	// filterRouterInfos(id)
 }
 
 func UpdateNode(id string, ip net.IP, port int) {
@@ -92,7 +94,7 @@ func UpdateNode(id string, ip net.IP, port int) {
 	defer ndLock.Unlock()
 	nodes[id] = netUtils.NewAddrPortWithIP(ip, port)
 
-	filterRouterInfos(id)
+	// filterRouterInfos(id)
 }
 
 // Invalid all outdated router info
@@ -156,8 +158,10 @@ func updateRouterDecision() {
 	}
 
 	if len(nodeIds) < len(nodes) {
+		log.Debugf("not all nodes have been connected, use default route algorithm")
 		defaultRouteAlgorithm()
 	} else {
+		log.Debugf("all nodes have been connected, use dijkstra route algorithm")
 		// dijkstra needs info of all nodes
 		dijkstraRouteAlgorithm()
 	}
@@ -168,7 +172,8 @@ func GetHop(id string) (netip.AddrPort, error) {
 	defer rdLock.RUnlock()
 	addr, ok := routerDecisions[id]
 	if !ok {
-		return netip.AddrPort{}, errors.New("no route to host")
+		log.Debugf("no route to %s, %v", id, linkStates)
+		return netip.AddrPort{}, errors.New(fmt.Sprintf("no route to %s", id))
 	}
 	return addr, nil
 }

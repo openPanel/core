@@ -28,14 +28,14 @@ func GetStreamInterceptorOption(src, dst string) grpc.DialOption {
 
 func getRouterInfoUnaryInterceptor(src, dst string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		ctx = metadata.AppendToOutgoingContext(ctx, constant.RPCSourceMetadataKey, src, constant.RPCDestinationMetadataKey, dst)
-		return invoker(ctx, method, req, reply, cc, opts...)
+		newCtx := metadata.AppendToOutgoingContext(ctx, constant.RPCSourceMetadataKey, src, constant.RPCDestinationMetadataKey, dst)
+		return invoker(newCtx, method, req, reply, cc, opts...)
 	}
 }
 
 func getRouterInfoStreamInterceptor(src, dst string) grpc.StreamClientInterceptor {
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-		ctx = metadata.AppendToOutgoingContext(ctx, constant.RPCSourceMetadataKey, src, constant.RPCDestinationMetadataKey, dst)
-		return streamer(ctx, desc, cc, method, opts...)
+		newCtx := metadata.AppendToOutgoingContext(ctx, constant.RPCSourceMetadataKey, src, constant.RPCDestinationMetadataKey, dst)
+		return streamer(newCtx, desc, cc, method, opts...)
 	}
 }
