@@ -2,14 +2,13 @@ package router
 
 import (
 	"fmt"
-	"net"
 	"net/netip"
 	"sync"
 
 	"github.com/pkg/errors"
 
+	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
-	"github.com/openPanel/core/app/tools/utils/netUtils"
 )
 
 type Edge struct {
@@ -39,7 +38,7 @@ type Node struct {
 // NodePersistence just prevent import cycle
 var NodePersistence func([]Node)
 
-func flattenNodes() []Node {
+func FlattedNodes() []Node {
 	flat := make([]Node, 0, len(nodes))
 	for id, addr := range nodes {
 		flat = append(flat, Node{
@@ -58,7 +57,7 @@ func AddNodes(ns []Node) {
 	}
 
 	if NodePersistence != nil {
-		NodePersistence(flattenNodes())
+		NodePersistence(FlattedNodes())
 	}
 }
 
@@ -71,35 +70,22 @@ func SetNodes(ns []Node) {
 	}
 
 	if NodePersistence != nil {
-		NodePersistence(flattenNodes())
+		NodePersistence(FlattedNodes())
 	}
 
-	// filterRouterInfos("")
+	filterLinkStates("")
 }
 
-func DeleteNode(id string) {
+func EditNodes(op func(ns []Node) []Node) {
 	ndLock.Lock()
 	defer ndLock.Unlock()
-	delete(nodes, id)
 
-	if NodePersistence != nil {
-		NodePersistence(flattenNodes())
-	}
-
-	// filterRouterInfos(id)
+	SetNodes(op(FlattedNodes()))
 }
 
-func UpdateNode(id string, ip net.IP, port int) {
-	ndLock.Lock()
-	defer ndLock.Unlock()
-	nodes[id] = netUtils.NewAddrPortWithIP(ip, port)
-
-	// filterRouterInfos(id)
-}
-
-// Invalid all outdated router info
+// Invalid all outdated link states
 // Delete all router info that related to the node which id is given
-func filterRouterInfos(id string) {
+func filterLinkStates(id string) {
 	lsLock.Lock()
 	defer lsLock.Unlock()
 
@@ -124,7 +110,7 @@ func filterRouterInfos(id string) {
 	}
 }
 
-func MergeLinkStates(infos ...LinkStates) {
+func UpdateLinkStates(infos ...LinkStates) {
 	lsLock.Lock()
 
 	for _, info := range infos {
@@ -135,7 +121,7 @@ func MergeLinkStates(infos ...LinkStates) {
 
 	lsLock.Unlock()
 
-	updateRouterDecision()
+	calculateRouting()
 }
 
 func GetLinkStates() LinkStates {
@@ -144,7 +130,30 @@ func GetLinkStates() LinkStates {
 	return linkStates
 }
 
-func updateRouterDecision() {
+func canUseDijkstra() bool {
+	ndLock.RLock()
+	defer ndLock.RUnlock()
+
+	currentNode := global.App.NodeInfo.ServerId
+
+	// dfs to find all nodes that can be reached from current node
+	visited := make(map[string]bool)
+	var dfs func(string)
+	dfs = func(node string) {
+		visited[node] = true
+		for edge := range linkStates {
+			if edge.From == node && !visited[edge.To] {
+				dfs(edge.To)
+			}
+		}
+	}
+
+	dfs(currentNode)
+
+	return len(visited) == len(nodes)
+}
+
+func calculateRouting() {
 	rdLock.Lock()
 	defer rdLock.Unlock()
 	lsLock.RLock()
@@ -152,18 +161,16 @@ func updateRouterDecision() {
 	ndLock.RLock()
 	defer ndLock.RUnlock()
 
-	var nodeIds = make(map[string]bool)
-	for edge := range linkStates {
-		nodeIds[edge.From] = true
-	}
+	log.Debugf("link states: %v", linkStates)
+	log.Debugf("nodes: %v", nodes)
 
-	if len(nodeIds) < len(nodes) {
-		log.Debugf("not all nodes have been connected, use default route algorithm")
-		defaultRouteAlgorithm()
-	} else {
+	if canUseDijkstra() {
 		log.Debugf("all nodes have been connected, use dijkstra route algorithm")
 		// dijkstra needs info of all nodes
 		dijkstraRouteAlgorithm()
+	} else {
+		log.Debugf("not all nodes have been connected, use default route algorithm")
+		defaultRouteAlgorithm()
 	}
 
 	log.Debugf("router decisions: %v", routerDecisions)

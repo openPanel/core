@@ -9,20 +9,20 @@ import (
 
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/global"
-	"github.com/openPanel/core/app/tools/log"
+	"github.com/openPanel/core/app/tools/middleware/common"
 )
 
 func GetUnaryInterceptorOption(src, dst string) grpc.DialOption {
 	return grpc.WithChainUnaryInterceptor(
 		getRouterInfoUnaryInterceptor(src, dst),
-		logging.UnaryClientInterceptor(log.InterceptorLogger(global.App.Logger.Named("grpc-client"))),
+		logging.UnaryClientInterceptor(common.InterceptorLogger(global.App.Logger.Named("grpc-client"))),
 	)
 }
 
 func GetStreamInterceptorOption(src, dst string) grpc.DialOption {
 	return grpc.WithChainStreamInterceptor(
 		getRouterInfoStreamInterceptor(src, dst),
-		logging.StreamClientInterceptor(log.InterceptorLogger(global.App.Logger.Named("grpc-client-stream"))),
+		logging.StreamClientInterceptor(common.InterceptorLogger(global.App.Logger.Named("grpc-client-stream"))),
 	)
 }
 

@@ -20,11 +20,11 @@ func dijkstraRouteAlgorithm() {
 	startNodeId := global.App.NodeInfo.ServerId
 	distances[startNodeId] = 0
 
-	Q := make(priorityQueue, 0)
-	heap.Push(&Q, &pqNode{id: startNodeId, distance: 0})
+	Q := make(PriorityQueue, 0)
+	heap.Push(&Q, &PQNode{id: startNodeId, distance: 0})
 
 	for Q.Len() > 0 {
-		u := heap.Pop(&Q).(*pqNode)
+		u := heap.Pop(&Q).(*PQNode)
 		for edge, latency := range linkStates {
 			if edge.From != u.id {
 				continue
@@ -33,7 +33,7 @@ func dijkstraRouteAlgorithm() {
 			if alt < distances[edge.To] {
 				distances[edge.To] = alt
 				previous[edge.To] = u.id
-				heap.Push(&Q, &pqNode{id: edge.To, distance: alt})
+				heap.Push(&Q, &PQNode{id: edge.To, distance: alt})
 			}
 		}
 	}

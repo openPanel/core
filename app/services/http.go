@@ -90,8 +90,6 @@ func wrapGrpcGatewayMux(mux *runtime.ServeMux) http.Handler {
 			}
 
 			if authToken != sentToken {
-				// FIXME: remove debug log
-				log.Debugf("invalid auth token: %s, expected: %s", sentToken, authToken)
 				w.WriteHeader(http.StatusUnauthorized)
 				_, _ = w.Write([]byte("invalid auth token"))
 				return

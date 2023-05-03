@@ -14,6 +14,7 @@ import (
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/router"
+	"github.com/openPanel/core/app/tools/broadcast"
 	"github.com/openPanel/core/app/tools/ca"
 	"github.com/openPanel/core/app/tools/convert"
 	"github.com/openPanel/core/app/tools/rpcDialer"
@@ -31,26 +32,24 @@ func (s *initializeService) UpdateLinkState(ctx context.Context, request *pb.Upd
 		return nil, err
 	}
 
-	router.MergeLinkStates(lstFromNewNode, lstToNewNode)
+	router.UpdateLinkStates(lstFromNewNode, lstToNewNode)
 
-	fullLst := router.GetLinkStates()
-
-	broadcastPayload, err := router.GetBroadcastPayload()
+	payload, err := broadcast.GetRouterPayload(convert.LinkStatesMerge(lstFromNewNode, lstToNewNode), nil, nil, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	// broadcast new link state
-	err = rpc.Broadcast([]rpc.BroadcastMessage{{
-		Type:    pb.BroadcastType_NOTIFY_LINK_STATE_CHANGE,
-		Payload: string(broadcastPayload),
-	}})
+	err = rpc.Broadcast(rpc.BroadcastMessage{
+		Type:    pb.BroadcastType_LINK_STATE_CHANGE,
+		Payload: payload,
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	return &pb.UpdateLinkStateResponse{
-		LinkStates: convert.LinkStatesRouterToPb(fullLst),
+		LinkStates: convert.LinkStatesRouterToPb(router.GetLinkStates()),
 	}, nil
 }
 
@@ -89,20 +88,24 @@ func (s *initializeService) Register(ctx context.Context, request *pb.RegisterRe
 		return nil, err
 	}
 
-	router.AddNodes([]router.Node{{
+	newRouterNode := router.Node{
 		Id:       request.ServerID,
 		AddrPort: netUtils.NewAddrPortWithString(request.Ip, int(request.Port)),
-	}})
-	router.MergeLinkStates(lstFromNewNode, lstToNewNode)
+	}
+	router.AddNodes([]router.Node{newRouterNode})
+	router.UpdateLinkStates(lstFromNewNode, lstToNewNode)
 
-	payload, err := router.GetBroadcastPayload()
+	payload, err := broadcast.GetRouterPayload(convert.LinkStatesMerge(lstFromNewNode, lstToNewNode), &[]router.Node{
+		newRouterNode,
+	}, nil, nil)
 	if err != nil {
 		return nil, err
 	}
-	err = rpc.Broadcast([]rpc.BroadcastMessage{{
-		Type:    pb.BroadcastType_NOTIFY_LINK_STATE_CHANGE,
-		Payload: string(payload),
-	}})
+
+	err = rpc.Broadcast(rpc.BroadcastMessage{
+		Type:    pb.BroadcastType_LINK_STATE_CHANGE,
+		Payload: payload,
+	})
 	if err != nil {
 		return nil, err
 	}

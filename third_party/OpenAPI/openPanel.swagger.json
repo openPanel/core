@@ -122,17 +122,18 @@
           "$ref": "#/definitions/openPanelBroadcastType"
         },
         "payload": {
-          "type": "string"
+          "type": "string",
+          "format": "byte"
         }
       }
     },
     "openPanelBroadcastType": {
       "type": "string",
       "enum": [
-        "NOTIFY_LINK_STATE_CHANGE"
+        "LINK_STATE_CHANGE"
       ],
-      "default": "NOTIFY_LINK_STATE_CHANGE",
-      "title": "- NOTIFY_LINK_STATE_CHANGE: payload include router.LinkStates in json format"
+      "default": "LINK_STATE_CHANGE",
+      "title": "- LINK_STATE_CHANGE: used for periodic latency re-establishment and node add/remove/modify"
     },
     "openPanelEstimateLatencyResponse": {
       "type": "object",

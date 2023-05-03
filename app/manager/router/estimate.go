@@ -41,7 +41,7 @@ func EstimateLatencies(nodes []Node, from string) LinkStates {
 func EstimateAndStoreLatencies() LinkStates {
 	filteredNodes := make([]Node, 0, len(nodes)-1)
 	ndLock.RLock()
-	for _, node := range flattenNodes() {
+	for _, node := range FlattedNodes() {
 		if node.Id != global.App.NodeInfo.ServerId {
 			filteredNodes = append(filteredNodes, node)
 		}
@@ -50,7 +50,7 @@ func EstimateAndStoreLatencies() LinkStates {
 
 	infos := EstimateLatencies(filteredNodes, global.App.NodeInfo.ServerId)
 
-	MergeLinkStates(infos)
+	UpdateLinkStates(infos)
 
 	return infos
 }

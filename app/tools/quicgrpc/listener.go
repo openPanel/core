@@ -42,18 +42,15 @@ func (l *Listener) tryAccept() {
 	for {
 		select {
 		case <-l.ctx.Done():
-			log.Debugf("quic listener closed")
 			return
 		default:
 			conn, err := l.ql.Accept(context.Background())
 			if err != nil {
-				log.Debugf("quic accept error: %v", err)
 				continue
 			}
 
 			stream, err := conn.AcceptStream(context.Background())
 			if err != nil {
-				log.Debugf("quic accept stream error: %v", err)
 				continue
 			}
 
@@ -70,13 +67,10 @@ func (l *Listener) Accept() (net.Conn, error) {
 	if !ok {
 		return nil, net.ErrClosed
 	}
-	log.Debugf("quic accept from conn queue")
 	return conn, nil
 }
 
 func (l *Listener) Close() error {
-	log.Debugf("quic listener closing")
-
 	l.cancel()
 	close(l.connQueue)
 	return l.ql.Close()
@@ -93,7 +87,7 @@ func NewQuicDialer(tlsConf *tls.Config) func(context.Context, string) (net.Conn,
 		if err != nil {
 			return nil, err
 		}
-		log.Debugf("quic dial: %s", s)
+
 		return NewConn(conn)
 	}
 }

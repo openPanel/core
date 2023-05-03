@@ -1,34 +1,27 @@
 package tasks
 
 import (
-	"encoding/json"
-
 	"github.com/openPanel/core/app/clients/rpc"
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/router"
-	"github.com/openPanel/core/app/tools/convert"
+	"github.com/openPanel/core/app/tools/broadcast"
 )
 
 func EstimateAndBroadcastLinkState() {
 	infos := router.EstimateAndStoreLatencies()
 
-	router.MergeLinkStates(infos)
+	router.UpdateLinkStates(infos)
 
-	linkStates := convert.LinkStatesRouterToPb(router.GetLinkStates())
-	broadcastPayload, err := json.Marshal(linkStates)
-	if err != nil {
-		log.Errorf("cron: failed to marshal link states: %v", err)
-		return
-	}
+	payload, err := broadcast.GetRouterPayload(infos, nil, nil, nil)
 
-	err = rpc.Broadcast([]rpc.BroadcastMessage{{
-		Type:    pb.BroadcastType_NOTIFY_LINK_STATE_CHANGE,
-		Payload: string(broadcastPayload),
-	}})
+	err = rpc.Broadcast(rpc.BroadcastMessage{
+		Type:    pb.BroadcastType_LINK_STATE_CHANGE,
+		Payload: payload,
+	})
 	if err != nil {
 		log.Errorf("cron: failed to broadcast link state: %v", err)
 		return
 	}
-	log.Infof("cron: broadcast link state periodically")
+	log.Infof("cron: broadcast link state periodic")
 }

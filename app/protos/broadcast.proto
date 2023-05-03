@@ -4,13 +4,13 @@ package openPanel;
 import "google/protobuf/empty.proto";
 
 enum BroadcastType {
-  // payload include router.LinkStates in json format
-  NOTIFY_LINK_STATE_CHANGE = 0;
+  // used for periodic latency re-establishment and node add/remove/modify
+  LINK_STATE_CHANGE = 0;
 }
 
 message Broadcast {
   BroadcastType type = 1;
-  string payload = 2;
+  bytes payload = 2;
 }
 
 message MultiBroadcastRequest {

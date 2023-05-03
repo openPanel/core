@@ -23,7 +23,6 @@ func DialFunction(_ context.Context, address string) (net.Conn, error) {
 		log.Debugf("dial dqlite err: %v", err)
 		return nil, err
 	}
-	log.Debugf("dial dqlite: %v -> %v", global.App.NodeInfo.ServerId, address)
 
 	client := pb.NewDqliteConnectionClient(conn)
 
@@ -32,7 +31,6 @@ func DialFunction(_ context.Context, address string) (net.Conn, error) {
 		log.Debugf("dial dqlite err: %v", err)
 		return nil, err
 	}
-	log.Debugf("rpc conn created: %v -> %v", global.App.NodeInfo.ServerId, address)
 	return NewClientRpcConn(stream, global.App.NodeInfo.ServerId, address), nil
 }
 

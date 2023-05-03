@@ -5,21 +5,19 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/openPanel/core/app/global"
-	"github.com/openPanel/core/app/tools/log"
+	"github.com/openPanel/core/app/tools/middleware/common"
 )
-
-// FIXME: add redirect interceptor
 
 func GetServerUnaryInterceptorOption() grpc.ServerOption {
 	return grpc.ChainUnaryInterceptor(
-		//serverRedirectUnaryInterceptor,
-		logging.UnaryServerInterceptor(log.InterceptorLogger(global.App.Logger.Named("grpc-server"))),
+		serverRedirectUnaryInterceptor,
+		logging.UnaryServerInterceptor(common.InterceptorLogger(global.App.Logger.Named("grpc-server"))),
 	)
 }
 
 func GetServerStreamInterceptorOption() grpc.ServerOption {
 	return grpc.ChainStreamInterceptor(
-		//serverRedirectStreamInterceptor,
-		logging.StreamServerInterceptor(log.InterceptorLogger(global.App.Logger.Named("grpc-server-stream"))),
+		serverRedirectStreamInterceptor,
+		logging.StreamServerInterceptor(common.InterceptorLogger(global.App.Logger.Named("grpc-server-stream"))),
 	)
 }

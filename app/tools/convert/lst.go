@@ -27,3 +27,13 @@ func LinkStatesPbToRouter(lst []*pb.LinkState) router.LinkStates {
 	}
 	return routerLst
 }
+
+func LinkStatesMerge(lst ...router.LinkStates) router.LinkStates {
+	newLst := make(router.LinkStates)
+	for _, l := range lst {
+		for k, v := range l {
+			newLst[k] = v
+		}
+	}
+	return newLst
+}

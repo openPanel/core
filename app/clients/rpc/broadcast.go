@@ -2,8 +2,9 @@ package rpc
 
 import (
 	"context"
-	"errors"
 	"sync"
+
+	"github.com/pkg/errors"
 
 	"github.com/openPanel/core/app/db/repo/shared"
 	"github.com/openPanel/core/app/generated/pb"
@@ -12,45 +13,36 @@ import (
 
 type BroadcastMessage = struct {
 	Type    pb.BroadcastType
-	Payload string
+	Payload []byte
 }
 
-func Broadcast(messages []BroadcastMessage) error {
+// Broadcast used for single shot broadcast
+func Broadcast(message BroadcastMessage) error {
 	nodes, err := shared.NodeRepo.GetBroadcastNodes(context.Background())
 	if err != nil {
 		return err
 	}
 
 	request := &pb.MultiBroadcastRequest{
-		Broadcasts: make([]*pb.Broadcast, len(messages)),
-	}
-
-	usedType := make(map[pb.BroadcastType]bool)
-
-	for i, message := range messages {
-		if _, ok := usedType[message.Type]; ok {
-			return errors.New("duplicate broadcast type")
-		}
-		request.Broadcasts[i] = &pb.Broadcast{
+		Broadcasts: []*pb.Broadcast{{
 			Type:    message.Type,
 			Payload: message.Payload,
-		}
-		usedType[message.Type] = true
+		}},
 	}
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(nodes))
 
-	errs := make([]error, 0)
+	errChan := make(chan error, len(nodes))
+	defer close(errChan)
 
-	for i := range nodes {
-		go func(i int) {
+	for _, node := range nodes {
+		go func(id string) {
 			defer wg.Done()
 
-			node := nodes[i]
-			conn, err := rpcDialer.DialWithServerId(node.ID)
+			conn, err := rpcDialer.DialWithServerId(id)
 			if err != nil {
-				errs = append(errs, err)
+				errChan <- err
 				return
 			}
 
@@ -58,14 +50,19 @@ func Broadcast(messages []BroadcastMessage) error {
 			_, err = client.Broadcast(context.Background(), request)
 
 			if err != nil {
-				errs = append(errs, err)
+				errChan <- err
+				return
 			}
-		}(i)
+		}(node.ID)
 	}
 
 	wg.Wait()
-	if len(errs) > 0 {
-		err := errors.Join(errs...)
+
+	if len(errChan) > 0 {
+		err := errors.New("broadcast failed")
+		for e := range errChan {
+			err = errors.Wrap(err, e.Error())
+		}
 		return err
 	}
 

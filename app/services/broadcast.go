@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/openPanel/core/app/generated/pb"
-	"github.com/openPanel/core/app/manager/router"
+	"github.com/openPanel/core/app/tools/broadcast"
 )
 
 var BroadcastService pb.BroadcastServiceServer = new(broadcastService)
@@ -16,22 +16,22 @@ type broadcastService struct{}
 
 func (b broadcastService) Broadcast(ctx context.Context, request *pb.MultiBroadcastRequest) (*emptypb.Empty, error) {
 	usedType := make(map[pb.BroadcastType]bool)
-	for _, broadcast := range request.Broadcasts {
-		if usedType[broadcast.Type] {
+	for _, bc := range request.Broadcasts {
+		if usedType[bc.Type] {
 			return nil, errors.New("duplicate broadcast type")
 		}
-		usedType[broadcast.Type] = true
+		usedType[bc.Type] = true
 	}
 
 	errs := make([]error, 0)
-	for _, broadcast := range request.Broadcasts {
-		handler := broadcastHandler[broadcast.Type]
+	for _, bc := range request.Broadcasts {
+		handler := broadcastHandler[bc.Type]
 		if handler == nil {
 			errs = append(errs, errors.New("unknown broadcast type"))
 			continue
 		}
 
-		err := handler(ctx, broadcast.Payload)
+		err := handler(ctx, bc.Payload)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -46,14 +46,14 @@ func (b broadcastService) Broadcast(ctx context.Context, request *pb.MultiBroadc
 	return &emptypb.Empty{}, nil
 }
 
-type BroadcastHandler func(ctx context.Context, payload string) error
+type BroadcastHandler func(ctx context.Context, payload []byte) error
 
 var broadcastHandler = map[pb.BroadcastType]BroadcastHandler{
-	pb.BroadcastType_NOTIFY_LINK_STATE_CHANGE: linkStateChange,
+	pb.BroadcastType_LINK_STATE_CHANGE: linkStateChange,
 }
 
 var _ BroadcastHandler = linkStateChange
 
-func linkStateChange(_ context.Context, payload string) error {
-	return router.LoadBroadcastPayload([]byte(payload))
+func linkStateChange(_ context.Context, payload []byte) error {
+	return broadcast.LoadRouterPayload(payload)
 }
