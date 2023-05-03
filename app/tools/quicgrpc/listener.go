@@ -7,7 +7,6 @@ import (
 
 	"github.com/quic-go/quic-go"
 
-	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/global/log"
 )
 
@@ -31,13 +30,13 @@ func Listen(ql quic.Listener) net.Listener {
 		ctx,
 	}
 
-	go listener.tryAccept()
+	go listener.acceptRoutine()
 
 	return listener
 }
 
-func (l *Listener) tryAccept() {
-	log.Debugf("quic listener try accept loop start")
+func (l *Listener) acceptRoutine() {
+	log.Debugf("quic listener accept routine started")
 
 	for {
 		select {
@@ -49,14 +48,26 @@ func (l *Listener) tryAccept() {
 				continue
 			}
 
+			go l.acceptStreamRoutine(conn)
+		}
+	}
+}
+
+func (l *Listener) acceptStreamRoutine(conn quic.Connection) {
+	for {
+		select {
+		case <-l.ctx.Done():
+			return
+		default:
 			stream, err := conn.AcceptStream(context.Background())
 			if err != nil {
-				continue
+				return
 			}
 
 			l.connQueue <- &Conn{
-				conn:   conn,
-				stream: stream,
+				localAddr:  conn.LocalAddr(),
+				remoteAddr: conn.RemoteAddr(),
+				stream:     stream,
 			}
 		}
 	}
@@ -81,9 +92,8 @@ func (l *Listener) Addr() net.Addr {
 }
 
 func NewQuicDialer(tlsConf *tls.Config) func(context.Context, string) (net.Conn, error) {
-	// TODO: cache quic connection, only accept new stream if connection is alive
 	return func(ctx context.Context, s string) (net.Conn, error) {
-		conn, err := quic.DialAddrContext(ctx, s, tlsConf, constant.QuicConfig)
+		conn, err := cacheableDial(ctx, tlsConf, s)
 		if err != nil {
 			return nil, err
 		}

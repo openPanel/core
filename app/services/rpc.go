@@ -29,7 +29,7 @@ func StartRpcServiceBlocking() {
 		listenAddr = fmt.Sprintf("%s:%d", global.App.NodeInfo.ServerListenIP.String(), global.App.NodeInfo.ServerPort)
 	}
 
-	qle, err := quic.ListenAddr(listenAddr, tlsConfig, constant.QuicConfig)
+	qle, err := quic.ListenAddr(listenAddr, tlsConfig, &constant.QuicConfig)
 	if err != nil {
 		log.Panicf("error listening: %v", err)
 	}

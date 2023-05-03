@@ -6,27 +6,25 @@ import (
 	"time"
 
 	"github.com/quic-go/quic-go"
-
-	"github.com/openPanel/core/app/global/log"
 )
 
 var _ net.Conn = (*Conn)(nil)
 
 type Conn struct {
-	conn   quic.Connection
-	stream quic.Stream
+	localAddr  net.Addr
+	remoteAddr net.Addr
+	stream     quic.Stream
 }
 
 func NewConn(conn quic.Connection) (net.Conn, error) {
 	stream, err := conn.OpenStreamSync(context.Background())
 	if err != nil {
-		log.Debugf("quic open stream error: %v", err)
 		return nil, err
 	}
-	log.Debugf("quic open stream success")
 	return &Conn{
-		conn:   conn,
-		stream: stream,
+		localAddr:  conn.LocalAddr(),
+		remoteAddr: conn.RemoteAddr(),
+		stream:     stream,
 	}, nil
 }
 
@@ -39,19 +37,15 @@ func (c *Conn) Write(b []byte) (n int, err error) {
 }
 
 func (c *Conn) Close() error {
-	err := c.stream.Close()
-	if err != nil {
-		return err
-	}
-	return c.conn.CloseWithError(0, "quic connection closed")
+	return c.stream.Close()
 }
 
 func (c *Conn) LocalAddr() net.Addr {
-	return c.conn.LocalAddr()
+	return c.localAddr
 }
 
 func (c *Conn) RemoteAddr() net.Addr {
-	return c.conn.RemoteAddr()
+	return c.remoteAddr
 }
 
 func (c *Conn) SetDeadline(t time.Time) error {

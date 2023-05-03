@@ -1,4 +1,4 @@
-package constant
+package quicgrpc
 
 import (
 	"time"
@@ -6,7 +6,8 @@ import (
 	"github.com/quic-go/quic-go"
 )
 
-var QuicConfig = quic.Config{
+var clientQuicConfig = &quic.Config{
 	MaxIdleTimeout:  time.Minute,
 	KeepAlivePeriod: time.Second * 30,
+	Tracer:          tracer,
 }
