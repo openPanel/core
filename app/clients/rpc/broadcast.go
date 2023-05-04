@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"google.golang.org/grpc"
 
 	"github.com/openPanel/core/app/db/repo/shared"
 	"github.com/openPanel/core/app/generated/pb"
@@ -45,6 +46,9 @@ func Broadcast(message BroadcastMessage) error {
 				errChan <- err
 				return
 			}
+			defer func(conn *grpc.ClientConn) {
+				_ = conn.Close()
+			}(conn)
 
 			client := pb.NewBroadcastServiceClient(conn)
 			_, err = client.Broadcast(context.Background(), request)

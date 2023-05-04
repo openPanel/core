@@ -5,6 +5,7 @@ import (
 	"net/netip"
 	"sync"
 
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/openPanel/core/app/clients/rpc"
@@ -162,6 +163,9 @@ func collectLatencies(ctx context.Context, ip string, port int, id string) (rout
 					log.Errorf("failed to connect to %s: %v", curId, err)
 					return
 				}
+				defer func(conn *grpc.ClientConn) {
+					_ = conn.Close()
+				}(conn)
 
 				client := pb.NewInitializeServiceClient(conn)
 				resp, err := client.EstimateLatency(ctx, &pb.EstimateLatencyRequest{

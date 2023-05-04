@@ -36,7 +36,7 @@ func serverRedirectUnaryInterceptor(
 	}(conn)
 
 	resp = getReplyInstanceFromHandler(handler)
-	err = conn.Invoke(ctx, info.FullMethod, req, resp)
+	err = conn.Invoke(ctx, info.FullMethod, req, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +86,7 @@ func serverRedirectStreamInterceptor(
 
 var _ grpc.ServerStream = (*redirectServerStream)(nil)
 
+// FIXME: implement headers and trailers correctly
 type redirectServerStream struct {
 	stream grpc.ClientStream
 }
