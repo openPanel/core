@@ -16,8 +16,8 @@ type Listener struct {
 	ql        quic.Listener
 	connQueue chan *Conn
 
-	cancel context.CancelFunc
-	ctx    context.Context
+	ctxCancel context.CancelFunc
+	ctx       context.Context
 }
 
 func Listen(ql quic.Listener) net.Listener {
@@ -58,10 +58,12 @@ func (l *Listener) acceptStreamRoutine(conn quic.Connection) {
 		select {
 		case <-l.ctx.Done():
 			return
+		case <-conn.Context().Done():
+			return
 		default:
 			stream, err := conn.AcceptStream(context.Background())
 			if err != nil {
-				return
+				continue
 			}
 
 			l.connQueue <- &Conn{
@@ -82,7 +84,7 @@ func (l *Listener) Accept() (net.Conn, error) {
 }
 
 func (l *Listener) Close() error {
-	l.cancel()
+	l.ctxCancel()
 	close(l.connQueue)
 	return l.ql.Close()
 }
