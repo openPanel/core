@@ -3,6 +3,7 @@ package router
 import (
 	"net/netip"
 	"sync"
+	"testing"
 
 	"github.com/openPanel/core/app/global"
 )
@@ -10,7 +11,9 @@ import (
 // since algorithm change global vars, it should only be tested sequentially
 var testLock sync.Mutex
 
-func setupTestData() {
+func setupTestData(t *testing.T) {
+	t.Helper()
+
 	nodes = map[string]netip.AddrPort{
 		"A": netip.MustParseAddrPort("127.0.0.1:8080"),
 		"B": netip.MustParseAddrPort("127.0.0.2:8081"),

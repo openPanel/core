@@ -9,7 +9,8 @@ import (
 func Test_defaultRouteAlgorithm(t *testing.T) {
 	testLock.Lock()
 	defer testLock.Unlock()
-	setupTestData()
+
+	setupTestData(t)
 
 	defaultRouteAlgorithm()
 
