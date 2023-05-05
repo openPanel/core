@@ -7,8 +7,8 @@ import (
 	"github.com/puzpuzpuz/xsync/v2"
 	"github.com/quic-go/quic-go"
 
-	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/constant"
+	"github.com/openPanel/core/app/manager/detector/stop"
 )
 
 var connCache = xsync.NewMapOf[quic.Connection]()
@@ -35,10 +35,10 @@ func cacheableDial(ctx context.Context, tlsConf *tls.Config, addr string) (quic.
 }
 
 func init() {
-	clean.RegisterCleanup(func() {
+	stop.RegisterCleanup(func() {
 		connCache.Range(func(key string, conn quic.Connection) bool {
 			_ = conn.CloseWithError(0, "server closed")
 			return true
 		})
-	})
+	}, constant.StopIDQUICConnCache)
 }

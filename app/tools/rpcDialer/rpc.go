@@ -1,6 +1,7 @@
 package rpcDialer
 
 import (
+	"github.com/mostynb/go-grpc-compression/zstd"
 	"google.golang.org/grpc"
 
 	"github.com/openPanel/core/app/global"
@@ -30,6 +31,7 @@ func DialWithAddress(address, target string) (*grpc.ClientConn, error) {
 		grpc.WithTransportCredentials(creds),
 		grpc.WithContextDialer(dialer),
 		grpc.WithAuthority(target),
+		grpc.WithDefaultCallOptions(grpc.UseCompressor(zstd.Name)),
 		client.GetStreamInterceptorOption(global.App.NodeInfo.ServerId, target),
 		client.GetUnaryInterceptorOption(global.App.NodeInfo.ServerId, target),
 	}

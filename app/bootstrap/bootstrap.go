@@ -3,13 +3,13 @@ package bootstrap
 import (
 	"net"
 
-	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/clients/http"
 	"github.com/openPanel/core/app/clients/rpc"
 	"github.com/openPanel/core/app/config"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 	"github.com/openPanel/core/app/manager/cron"
+	"github.com/openPanel/core/app/manager/detector/stop"
 	"github.com/openPanel/core/app/manager/router"
 	"github.com/openPanel/core/app/services"
 	"github.com/openPanel/core/app/tools/ca"
@@ -71,7 +71,7 @@ func Create(listenIp net.IP, listenPort int) {
 
 	startServices()
 
-	clean.RunEndless()
+	stop.RunEndless()
 }
 
 // Join a cluster
@@ -154,7 +154,7 @@ func Join(listenIp net.IP, listenPort int, ip net.IP, port int, token string) {
 	startServices()
 
 	initialized = true
-	clean.RunEndless()
+	stop.RunEndless()
 }
 
 // Resume resume a node to cluster
@@ -213,7 +213,7 @@ func Resume() {
 
 	startServices()
 
-	clean.RunEndless()
+	stop.RunEndless()
 }
 
 func commonInit() {
@@ -226,12 +226,12 @@ func commonInit() {
 }
 
 func startServices() {
-	go cron.Start()
+	cron.Start()
 	log.Infof("Cron service started")
 
-	go services.StartRpcServiceBlocking()
+	services.StartRpcService()
 	log.Infof("RPC service started on %s:%d", global.App.NodeInfo.ServerListenIP, global.App.NodeInfo.ServerPort)
 
-	go services.StartHttpServiceBlocking()
+	services.StartHttpService()
 	log.Infof("HTTP service started on %s:%d", global.App.NodeInfo.ServerListenIP, global.App.NodeInfo.ServerPort)
 }

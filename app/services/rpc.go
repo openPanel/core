@@ -5,15 +5,15 @@ import (
 
 	"github.com/quic-go/quic-go"
 
-	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
+	"github.com/openPanel/core/app/manager/detector/stop"
 	"github.com/openPanel/core/app/tools/ca"
 	"github.com/openPanel/core/app/tools/quicgrpc"
 )
 
-func StartRpcServiceBlocking() {
+func StartRpcService() {
 	grpcServer := newGrpcServer()
 
 	tlsConfig, err := ca.GenerateRPCTLSConfig(global.App.NodeInfo.ServerCert, global.App.NodeInfo.ServerPrivateKey, global.App.NodeInfo.ClusterCaCert)
@@ -35,12 +35,14 @@ func StartRpcServiceBlocking() {
 	}
 	listener := quicgrpc.Listen(qle)
 
-	if err = grpcServer.Serve(listener); err != nil {
-		log.Panicf("error serving grpc: %v", err)
-	}
-
-	clean.RegisterCleanup(func() {
+	stop.RegisterCleanup(func() {
 		grpcServer.GracefulStop()
 		log.Debug("grpc service stopped")
-	})
+	}, constant.StopIDGRPCQUICServer, constant.StopIDLogger)
+
+	go func() {
+		if err = grpcServer.Serve(listener); err != nil {
+			log.Panicf("error serving grpc: %v", err)
+		}
+	}()
 }

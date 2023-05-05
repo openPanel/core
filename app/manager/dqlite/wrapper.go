@@ -7,11 +7,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/canonical/go-dqlite/app"
 
-	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/generated/db/shared"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
+	"github.com/openPanel/core/app/manager/detector/stop"
 	"github.com/openPanel/core/app/tools/utils/fileUtils"
 )
 
@@ -59,7 +59,7 @@ func createSharedDatabase(clusterAddrs *[]string) (*shared.Client, error) {
 		return nil, err
 	}
 
-	clean.RegisterCleanup(func() {
+	stop.RegisterCleanup(func() {
 		err := db.Close()
 		if err != nil {
 			log.Warn("Failed to close shared database: %v", err)
@@ -73,7 +73,7 @@ func createSharedDatabase(clusterAddrs *[]string) (*shared.Client, error) {
 			log.Warn("Failed to close dqlite: %v", err)
 		}
 		log.Infof("Shared database closed")
-	})
+	}, constant.StopIDSharedDqliteDB, constant.StopIDLogger, constant.StopIDQUICConnCache)
 
 	return client, nil
 }

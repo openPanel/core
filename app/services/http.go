@@ -11,12 +11,12 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/config"
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/generated/pb"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
+	"github.com/openPanel/core/app/manager/detector/stop"
 	"github.com/openPanel/core/app/tools/ca"
 	"github.com/openPanel/core/app/tools/middleware/gateway"
 	"github.com/openPanel/core/third_party/OpenAPI"
@@ -28,14 +28,14 @@ func initGrpcGatewayMux() *runtime.ServeMux {
 		log.Panicf("error listening: %v", err)
 	}
 
+	grpcServer := newGrpcServer()
+
+	stop.RegisterCleanup(func() {
+		grpcServer.GracefulStop()
+		log.Debug("unix grpc gateway stopped")
+	}, constant.StopIDGRPCUnixServer, constant.StopIDLogger)
+
 	go func() {
-		grpcServer := newGrpcServer()
-
-		clean.RegisterCleanup(func() {
-			grpcServer.GracefulStop()
-			log.Debug("unix grpc gateway stopped")
-		})
-
 		if err := grpcServer.Serve(unixListener); err != nil {
 			log.Panicf("error serving loop back grpc: %v", err)
 		}
@@ -107,7 +107,7 @@ func getServerHandler() http.HandlerFunc {
 	return router.ServeHTTP
 }
 
-func StartHttpServiceBlocking() {
+func StartHttpService() {
 	tlsConfig, err := ca.GenerateHTTPTLSConfig(global.App.NodeInfo.ServerCert, global.App.NodeInfo.ServerPrivateKey)
 	if err != nil {
 		log.Panicf("error generating tls config: %v", err)
@@ -126,13 +126,15 @@ func StartHttpServiceBlocking() {
 		Handler:   getServerHandler(),
 	}
 
-	clean.RegisterCleanup(func() {
+	stop.RegisterCleanup(func() {
 		err := s.Shutdown(context.Background())
 		if err != nil {
 			log.Warnf("error shutting down http server: %v", err)
 		}
 		log.Infof("outer grpc gateway stopped")
-	})
+	}, constant.StopIDGRPCHTTPServer, constant.StopIDLogger)
 
-	_ = s.ListenAndServeTLS("", "")
+	go func() {
+		_ = s.ListenAndServeTLS("", "")
+	}()
 }

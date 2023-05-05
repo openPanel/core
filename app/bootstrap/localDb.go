@@ -10,11 +10,11 @@ import (
 	"github.com/canonical/go-dqlite"
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/openPanel/core/app/bootstrap/clean"
 	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/generated/db/local"
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
+	"github.com/openPanel/core/app/manager/detector/stop"
 	"github.com/openPanel/core/app/tools/utils/fileUtils"
 )
 
@@ -42,13 +42,13 @@ func getInitLocalDatabase() *local.Client {
 
 	log.Infof("Local database initialized at %s", path)
 
-	clean.RegisterCleanup(func() {
+	stop.RegisterCleanup(func() {
 		err := client.Close()
 		if err != nil {
 			log.Warn("Failed to close local database: %v", err)
 		}
 		log.Infof("Local database closed")
-	})
+	}, constant.StopIDLocalSqliteDB, constant.StopIDLogger)
 
 	return client
 }

@@ -5,8 +5,9 @@ import (
 
 	"github.com/go-co-op/gocron"
 
-	"github.com/openPanel/core/app/bootstrap/clean"
+	"github.com/openPanel/core/app/constant"
 	"github.com/openPanel/core/app/global/log"
+	"github.com/openPanel/core/app/manager/detector/stop"
 )
 
 var scheduler = gocron.NewScheduler(time.UTC)
@@ -14,13 +15,12 @@ var scheduler = gocron.NewScheduler(time.UTC)
 func Start() {
 	registerDefaultCronTasks()
 
-	clean.RegisterCleanup(func() {
+	stop.RegisterCleanup(func() {
 		scheduler.Stop()
 		log.Info("cron manager: scheduler stopped")
+	}, constant.StopIDCron, constant.StopIDLogger)
 
-	})
-
-	go scheduler.StartBlocking()
+	scheduler.StartAsync()
 }
 
 func Op(fn func(s *gocron.Scheduler)) {
