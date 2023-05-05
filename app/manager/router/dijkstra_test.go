@@ -7,9 +7,6 @@ import (
 )
 
 func Test_dijkstraRouteAlgorithm(t *testing.T) {
-	testLock.Lock()
-	defer testLock.Unlock()
-
 	setupTestData(t)
 
 	dijkstraRouteAlgorithm()

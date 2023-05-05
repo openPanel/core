@@ -2,14 +2,10 @@ package router
 
 import (
 	"net/netip"
-	"sync"
 	"testing"
 
 	"github.com/openPanel/core/app/global"
 )
-
-// since algorithm change global vars, it should only be tested sequentially
-var testLock sync.Mutex
 
 func setupTestData(t *testing.T) {
 	t.Helper()
