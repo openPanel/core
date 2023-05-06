@@ -6,7 +6,7 @@ require (
 	entgo.io/contrib v0.4.5
 	entgo.io/ent v0.12.3
 	github.com/Rican7/retry v0.3.1
-	github.com/canonical/go-dqlite v1.11.9
+	github.com/canonical/go-dqlite v1.11.10-0.20230505064733-407917ceb505
 	github.com/flowchartsman/swaggerui v0.0.0
 	github.com/go-co-op/gocron v1.25.0
 	github.com/go-resty/resty/v2 v2.7.0
@@ -16,12 +16,13 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lorenzosaino/go-sysctl v0.3.1
 	github.com/mattn/go-sqlite3 v1.14.16
-	github.com/mostynb/go-grpc-compression v1.1.17
+	github.com/mostynb/go-grpc-compression v1.1.18
 	github.com/pkg/errors v0.9.1
 	github.com/puzpuzpuz/xsync/v2 v2.4.0
 	github.com/quic-go/quic-go v0.34.0
 	github.com/samber/lo v1.38.1
 	github.com/stretchr/testify v1.8.2
+	github.com/ugurcsen/gods-generic v0.10.2
 	github.com/urfave/cli/v2 v2.25.3
 	go.uber.org/zap v1.24.0
 	golang.org/x/sys v0.8.0
@@ -31,10 +32,8 @@ require (
 )
 
 replace (
-	entgo.io/ent => github.com/openPanel/ent v0.0.0-20230503122046-c6ad86d57a4e
-	github.com/canonical/go-dqlite => github.com/openPanel/go-dqlite v0.0.0-20230503121819-1cce12e33696
+	entgo.io/ent => github.com/openPanel/ent v0.0.0-20230506093134-696156b378ae
 	github.com/flowchartsman/swaggerui => github.com/openPanel/swaggerui v0.0.0-20230401141121-264dd475eced
-	github.com/mostynb/go-grpc-compression => github.com/openPanel/go-grpc-compression v0.0.0-20230505115748-72622dfe175b
 )
 
 require (
