@@ -6,34 +6,38 @@ import (
 )
 
 func LinkStatesRouterToPb(lst router.LinkStates) []*pb.LinkState {
-	var pbLst []*pb.LinkState
-	for edge, latency := range lst {
-		pbLst = append(pbLst, &pb.LinkState{
-			From:    edge.From,
-			To:      edge.To,
-			Latency: int32(latency),
-		})
+	var pbLst = make([]*pb.LinkState, len(lst))
+	for i, linkState := range lst {
+		pbLst[i] = &pb.LinkState{
+			From:    linkState.From,
+			To:      linkState.To,
+			Latency: int32(linkState.Latency),
+		}
 	}
 	return pbLst
 }
 
 func LinkStatesPbToRouter(lst []*pb.LinkState) router.LinkStates {
-	var routerLst = make(router.LinkStates)
-	for _, linkState := range lst {
-		routerLst[router.Edge{
-			From: linkState.From,
-			To:   linkState.To,
-		}] = int(linkState.Latency)
+	var routerLst = make(router.LinkStates, len(lst))
+	for i, linkState := range lst {
+		routerLst[i] = router.LinkState{
+			From:    linkState.From,
+			To:      linkState.To,
+			Latency: int(linkState.Latency),
+		}
 	}
 	return routerLst
 }
 
 func LinkStatesMerge(lst ...router.LinkStates) router.LinkStates {
-	newLst := make(router.LinkStates)
+	size := 0
 	for _, l := range lst {
-		for k, v := range l {
-			newLst[k] = v
-		}
+		size += len(l)
 	}
-	return newLst
+
+	var mergedLst = make(router.LinkStates, 0, size)
+	for _, l := range lst {
+		mergedLst = append(mergedLst, l...)
+	}
+	return mergedLst
 }

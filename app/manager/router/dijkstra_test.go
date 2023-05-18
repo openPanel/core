@@ -11,8 +11,24 @@ func Test_dijkstraRouteAlgorithm(t *testing.T) {
 
 	dijkstraRouteAlgorithm()
 
-	assert.Equal(t, routerDecisions["B"], nodes["B"])
-	assert.Equal(t, routerDecisions["C"], nodes["B"])
-	assert.Equal(t, routerDecisions["D"], nodes["B"])
-	assert.Equal(t, routerDecisions["E"], nodes["E"])
+	assert.Equal(t, decisions["B"], nodes["B"])
+	assert.Equal(t, decisions["C"], nodes["B"])
+	assert.Equal(t, decisions["D"], nodes["B"])
+	assert.Equal(t, decisions["E"], nodes["E"])
+}
+
+func Benchmark_dijkstraRouteAlgorithm(b *testing.B) {
+	b.Run("dijkstraRouteAlgorithm 1000", func(b *testing.B) {
+		setupBenchmarkData(b, 1000)
+		for i := 0; i < b.N; i++ {
+			dijkstraRouteAlgorithm()
+		}
+	})
+
+	b.Run("dijkstraRouteAlgorithm 10000", func(b *testing.B) {
+		setupBenchmarkData(b, 10000)
+		for i := 0; i < b.N; i++ {
+			dijkstraRouteAlgorithm()
+		}
+	})
 }

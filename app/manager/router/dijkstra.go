@@ -1,16 +1,27 @@
 package router
 
 import (
-	"container/heap"
 	"math"
+
+	pq "github.com/ugurcsen/gods-generic/queues/priorityqueue"
+	"github.com/ugurcsen/gods-generic/utils"
 
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
 )
 
+type netNode struct {
+	id       string
+	distance int
+}
+
+func byDistance(a, b netNode) int {
+	return utils.NumberComparator(a.distance, b.distance)
+}
+
 func dijkstraRouteAlgorithm() {
-	distances := make(map[string]int)
-	previous := make(map[string]string)
+	distances := make(map[string]int, len(nodes))
+	previous := make(map[string]string, len(nodes))
 
 	for id := range nodes {
 		distances[id] = math.MaxInt32
@@ -20,20 +31,22 @@ func dijkstraRouteAlgorithm() {
 	startNodeId := global.App.NodeInfo.ServerId
 	distances[startNodeId] = 0
 
-	Q := make(PriorityQueue, 0)
-	heap.Push(&Q, &PQNode{id: startNodeId, distance: 0})
+	Q := pq.NewWith(byDistance)
+	Q.Enqueue(netNode{id: startNodeId, distance: 0})
 
-	for Q.Len() > 0 {
-		u := heap.Pop(&Q).(*PQNode)
-		for edge, latency := range linkStates {
-			if edge.From != u.id {
-				continue
-			}
-			alt := distances[u.id] + latency
+	for !Q.Empty() {
+		u, _ := Q.Dequeue()
+
+		if distances[u.id] < u.distance {
+			continue
+		}
+
+		for _, edge := range linkStates[u.id] {
+			alt := distances[u.id] + edge.Latency
 			if alt < distances[edge.To] {
 				distances[edge.To] = alt
 				previous[edge.To] = u.id
-				heap.Push(&Q, &PQNode{id: edge.To, distance: alt})
+				Q.Enqueue(netNode{id: edge.To, distance: alt})
 			}
 		}
 	}
@@ -43,7 +56,7 @@ func dijkstraRouteAlgorithm() {
 		if len(previous[nodeId]) == 0 {
 			return []string{nodeId}
 		}
-		var path = make([]string, 0)
+		var path = make([]string, 0, 6)
 		path = append(path, calPath(previous[nodeId])...)
 		path = append(path, nodeId)
 		return path
@@ -57,6 +70,6 @@ func dijkstraRouteAlgorithm() {
 		if len(path) < 2 {
 			log.Warnf("No path to node %s", id)
 		}
-		routerDecisions[id] = nodes[path[1]]
+		decisions[id] = nodes[path[1]]
 	}
 }

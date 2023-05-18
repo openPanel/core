@@ -140,10 +140,11 @@ func collectLatencies(ctx context.Context, ip string, port int, id string) (rout
 		lock.Lock()
 		defer lock.Unlock()
 
-		lst[router.Edge{
-			From: curId,
-			To:   id,
-		}] = latency
+		lst = append(lst, router.LinkState{
+			From:    curId,
+			To:      id,
+			Latency: latency,
+		})
 	}
 
 	for _, node := range nodes {

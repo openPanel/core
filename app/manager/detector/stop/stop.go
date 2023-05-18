@@ -13,8 +13,17 @@ import (
 	"github.com/openPanel/core/app/global/log"
 )
 
-var cleanups []func()
 var cleanLock sync.Mutex
+
+var cleanOps map[constant.StopID]cleanOp
+
+type cleanOp struct {
+	// deps is the dependencies of this cleanup operation
+	// if any of the dependencies is not executed, this cleanup operation will not be executed
+	deps []constant.StopID
+	// fn is the cleanup function
+	fn func()
+}
 
 func RegisterCleanup(cleanup func(), id constant.StopID, deps ...constant.StopID) {
 	ret := cleanLock.TryLock()
@@ -23,7 +32,32 @@ func RegisterCleanup(cleanup func(), id constant.StopID, deps ...constant.StopID
 	}
 
 	defer cleanLock.Unlock()
-	cleanups = append(cleanups, cleanup)
+	cleanOps[id] = cleanOp{
+		deps: deps,
+		fn:   cleanup,
+	}
+}
+
+func buildExecuteOrder() {
+	inDeg := map[constant.StopID]int{}
+
+	for id := range cleanOps {
+		inDeg[id] = 0
+	}
+
+	for id := range cleanOps {
+		for _, dep := range cleanOps[id].deps {
+			inDeg[dep]++
+		}
+	}
+
+	var q []constant.StopID
+	for id := range cleanOps {
+		if inDeg[id] == 0 {
+			q = append(q, id)
+		}
+	}
+
 }
 
 func RunEndless() {
@@ -48,19 +82,6 @@ func RunEndless() {
 	}()
 
 	log.Infof("Received signal %s, cleaning up", sig.String())
-
-	wg := sync.WaitGroup{}
-	for _, cleanup := range cleanups {
-		wg.Add(1)
-		go func(cleanup func()) {
-			defer wg.Done()
-			cleanup()
-		}(cleanup)
-	}
-	wg.Wait()
-
-	log.Info("Cleaned up, exiting")
-	_ = log.Sync()
 
 	os.Exit(0)
 }

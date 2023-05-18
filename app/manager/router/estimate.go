@@ -12,7 +12,8 @@ import (
 func EstimateLatencies(nodes []Node, from string) LinkStates {
 	wg := sync.WaitGroup{}
 	wg.Add(len(nodes))
-	infos := map[Edge]int{}
+	infos := make(LinkStates, 0, len(nodes))
+	infoLock := sync.Mutex{}
 
 	for _, node := range nodes {
 		go func(id string, addr netip.AddrPort) {
@@ -24,10 +25,13 @@ func EstimateLatencies(nodes []Node, from string) LinkStates {
 				return
 			}
 
-			infos[Edge{
-				From: from,
-				To:   id,
-			}] = latency
+			infoLock.Lock()
+			infos = append(infos, LinkState{
+				From:    from,
+				To:      id,
+				Latency: latency,
+			})
+
 		}(node.Id, node.AddrPort)
 	}
 

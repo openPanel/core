@@ -11,8 +11,8 @@ func Test_defaultRouteAlgorithm(t *testing.T) {
 
 	defaultRouteAlgorithm()
 
-	assert.Equal(t, routerDecisions["B"], nodes["B"])
-	assert.Equal(t, routerDecisions["C"], nodes["C"])
-	assert.Equal(t, routerDecisions["D"], nodes["E"])
-	assert.Equal(t, routerDecisions["E"], nodes["E"])
+	assert.Equal(t, decisions["B"], nodes["B"])
+	assert.Equal(t, decisions["C"], nodes["C"])
+	assert.Equal(t, decisions["D"], nodes["E"])
+	assert.Equal(t, decisions["E"], nodes["E"])
 }

@@ -11,15 +11,16 @@ import (
 	"github.com/openPanel/core/app/global/log"
 )
 
-type Edge struct {
-	From string `json:"f"`
-	To   string `json:"t"`
+type LinkState struct {
+	From    string `json:"u"`
+	To      string `json:"v"`
+	Latency int    `json:"w"`
 }
 
-type LinkStates = map[Edge]int
+type LinkStates = []LinkState
 
 // RouterInfo The map store the latency between two nodes
-var linkStates = LinkStates{}
+var linkStates = map[string][]LinkState{}
 var lsLock = sync.RWMutex{}
 
 // nodes The map store the nodes info
@@ -27,7 +28,7 @@ var nodes = map[string]netip.AddrPort{}
 var ndLock = sync.RWMutex{}
 
 // RouterDecisions The map store the decision of the router, value define the next hop
-var routerDecisions = make(map[string]netip.AddrPort)
+var decisions = make(map[string]netip.AddrPort)
 var rdLock = sync.RWMutex{}
 
 type Node struct {
@@ -72,8 +73,6 @@ func SetNodes(ns []Node) {
 	if NodePersistence != nil {
 		NodePersistence(FlattedNodes())
 	}
-
-	filterLinkStates("")
 }
 
 func EditNodes(op func(ns []Node) []Node) {
@@ -83,39 +82,36 @@ func EditNodes(op func(ns []Node) []Node) {
 	SetNodes(op(FlattedNodes()))
 }
 
-// Invalid all outdated link states
-// Delete all router info that related to the node which id is given
-func filterLinkStates(id string) {
-	lsLock.Lock()
-	defer lsLock.Unlock()
-
-	// we assume nodes has already been locked
-	nodeMap := make(map[string]bool)
-	for nodeId := range nodes {
-		nodeMap[nodeId] = true
-	}
-
-	if len(linkStates) == 0 {
-		return
-	}
-
-	for link := range linkStates {
-		if link.From == id || link.To == id {
-			delete(linkStates, link)
-		}
-		// remove no exist router info
-		if !nodeMap[link.From] || !nodeMap[link.To] {
-			delete(linkStates, link)
-		}
-	}
-}
-
+// UpdateLinkStates Update the latency between nodes
+// All link from the node included in the infos will be cleared before update
 func UpdateLinkStates(infos ...LinkStates) {
 	lsLock.Lock()
 
+	tmp := make(map[string]map[string]int)
+
+	editedNodes := make(map[string]bool)
+
 	for _, info := range infos {
-		for link, latency := range info {
-			linkStates[link] = latency
+		for _, link := range info {
+			if _, ok := tmp[link.From]; !ok {
+				tmp[link.From] = make(map[string]int)
+			}
+			tmp[link.From][link.To] = link.Latency
+			editedNodes[link.From] = true
+		}
+	}
+
+	for node := range editedNodes {
+		linkStates[node] = make([]LinkState, 0, len(tmp[node]))
+	}
+
+	for node, links := range tmp {
+		for to, latency := range links {
+			linkStates[node] = append(linkStates[node], LinkState{
+				From:    node,
+				To:      to,
+				Latency: latency,
+			})
 		}
 	}
 
@@ -127,7 +123,11 @@ func UpdateLinkStates(infos ...LinkStates) {
 func GetLinkStates() LinkStates {
 	lsLock.RLock()
 	defer lsLock.RUnlock()
-	return linkStates
+	ret := make(LinkStates, 0)
+	for _, links := range linkStates {
+		ret = append(ret, links...)
+	}
+	return ret
 }
 
 func canUseDijkstra() bool {
@@ -136,14 +136,14 @@ func canUseDijkstra() bool {
 
 	currentNode := global.App.NodeInfo.ServerId
 
-	// dfs to find all nodes that can be reached from current node
+	// dfs to check if all nodes that can be reached from current node
 	visited := make(map[string]bool)
 	var dfs func(string)
 	dfs = func(node string) {
 		visited[node] = true
-		for edge := range linkStates {
-			if edge.From == node && !visited[edge.To] {
-				dfs(edge.To)
+		for _, link := range linkStates[node] {
+			if !visited[link.To] {
+				dfs(link.To)
 			}
 		}
 	}
@@ -173,15 +173,15 @@ func calculateRouting() {
 		defaultRouteAlgorithm()
 	}
 
-	log.Debugf("router decisions: %v", routerDecisions)
+	log.Debugf("router decisions: %v", decisions)
 }
 
 func GetHop(id string) (netip.AddrPort, error) {
 	rdLock.RLock()
 	defer rdLock.RUnlock()
-	addr, ok := routerDecisions[id]
+	addr, ok := decisions[id]
 	if !ok {
-		log.Debugf("no route to %s, %v", id, routerDecisions)
+		log.Debugf("no route to %s, %v", id, decisions)
 		return netip.AddrPort{}, errors.New(fmt.Sprintf("no route to %s", id))
 	}
 	return addr, nil

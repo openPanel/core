@@ -19,7 +19,7 @@ func defaultRouteAlgorithm() {
 	}
 
 	// reset router decision
-	routerDecisions = map[string]netip.AddrPort{}
+	decisions = map[string]netip.AddrPort{}
 
 	// find the lowest latency node
 	var lowestLatencyNode string
@@ -28,17 +28,13 @@ func defaultRouteAlgorithm() {
 	var reachableNodes = map[string]int{}
 
 	// find all reachable node
-	for edge, latency := range linkStates {
-		if edge.From != global.App.NodeInfo.ServerId {
-			continue
-		}
-
-		if latency < lowestLatency {
-			lowestLatency = latency
+	for _, edge := range linkStates[global.App.NodeInfo.ServerId] {
+		if edge.Latency < lowestLatency {
+			lowestLatency = edge.Latency
 			lowestLatencyNode = edge.To
 		}
 
-		reachableNodes[edge.To] = latency
+		reachableNodes[edge.To] = edge.Latency
 	}
 
 	for id, node := range nodes {
@@ -46,9 +42,9 @@ func defaultRouteAlgorithm() {
 			continue
 		}
 		if _, ok := reachableNodes[id]; ok {
-			routerDecisions[id] = node
+			decisions[id] = node
 		} else {
-			routerDecisions[id] = nodes[lowestLatencyNode]
+			decisions[id] = nodes[lowestLatencyNode]
 		}
 	}
 }
