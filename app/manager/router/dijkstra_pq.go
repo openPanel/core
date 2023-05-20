@@ -1,9 +1,12 @@
-//go:build !pq
+//go:build pq
 
 package router
 
 import (
 	"math"
+
+	pq "github.com/ugurcsen/gods-generic/queues/priorityqueue"
+	"github.com/ugurcsen/gods-generic/utils"
 
 	"github.com/openPanel/core/app/global"
 	"github.com/openPanel/core/app/global/log"
@@ -14,10 +17,13 @@ type netNode struct {
 	distance int
 }
 
+func byDistance(a, b netNode) int {
+	return utils.NumberComparator(a.distance, b.distance)
+}
+
 func dijkstraRouteAlgorithm() {
 	distances := make(map[string]int, len(nodes))
 	previous := make(map[string]string, len(nodes))
-	visited := make(map[string]bool, len(nodes))
 
 	for id := range nodes {
 		distances[id] = math.MaxInt32
@@ -27,25 +33,22 @@ func dijkstraRouteAlgorithm() {
 	startNodeId := global.App.NodeInfo.ServerId
 	distances[startNodeId] = 0
 
-	for len(visited) < len(nodes) {
-		// Find the unvisited node with the smallest distance
-		minDistance := math.MaxInt32
-		minNode := netNode{}
+	Q := pq.NewWith(byDistance)
+	Q.Enqueue(netNode{id: startNodeId, distance: 0})
 
-		for id, distance := range distances {
-			if !visited[id] && distance < minDistance {
-				minDistance = distance
-				minNode = netNode{id: id, distance: distance}
-			}
+	for !Q.Empty() {
+		u, _ := Q.Dequeue()
+
+		if distances[u.id] < u.distance {
+			continue
 		}
 
-		visited[minNode.id] = true
-
-		for _, edge := range linkStates[minNode.id] {
-			alt := distances[minNode.id] + edge.Latency
+		for _, edge := range linkStates[u.id] {
+			alt := distances[u.id] + edge.Latency
 			if alt < distances[edge.To] {
 				distances[edge.To] = alt
-				previous[edge.To] = minNode.id
+				previous[edge.To] = u.id
+				Q.Enqueue(netNode{id: edge.To, distance: alt})
 			}
 		}
 	}
